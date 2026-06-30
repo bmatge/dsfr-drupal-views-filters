@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Filtres exposés — bac à sable (DSFR)</title>
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--background-alt-grey);font-family:var(--font-sans);color:var(--text-default-grey)}
+  code{font-family:var(--font-mono);font-size:13px;background:var(--grey-950);padding:1px 6px;border-radius:2px;color:var(--grey-100)}
+  button{font-family:inherit}
+  input[type=range]{accent-color:var(--blue-france-sun-113)}
+</style>
+</head>
+<body>
+<div style="max-width:1000px;margin:0 auto;padding:44px 24px 120px">
+
+  <p style="margin:0 0 6px;font:700 13px/18px var(--font-sans);text-transform:uppercase;letter-spacing:.06em;color:var(--text-action-high-blue-france)">Prototype interactif · DSFR</p>
+  <h1 style="margin:0 0 26px;font:700 36px/44px var(--font-sans);color:var(--text-title-grey);letter-spacing:-.01em">Filtres exposés — bac à sable</h1>
+
+  <!-- ===== ZONE DE SETUP ===== -->
+  <div style="background:var(--grey-100);color:#fff;padding:24px 26px;margin-bottom:0">
+    <p style="margin:0 0 18px;font:700 13px/18px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--blue-france-moon-625);display:flex;align-items:center;gap:8px"><i class="ri-settings-3-line"></i>Réglages</p>
+
+    <div style="display:flex;flex-wrap:wrap;gap:28px 40px">
+      <div>
+        <p style="margin:0 0 8px;font:500 13px/18px var(--font-sans);color:var(--grey-800)">Type d'élément</p>
+        <div id="type-buttons" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+      <div>
+        <p style="margin:0 0 8px;font:500 13px/18px var(--font-sans);color:var(--grey-800)">Emplacement</p>
+        <div id="zone-buttons" style="display:flex;gap:6px"></div>
+      </div>
+    </div>
+
+    <div id="options-controls" style="display:flex;flex-wrap:wrap;gap:28px 40px;margin-top:22px;padding-top:20px;border-top:1px solid var(--grey-200)">
+      <div>
+        <p style="margin:0 0 8px;font:500 13px/18px var(--font-sans);color:var(--grey-800)">Longueur des libellés</p>
+        <div id="label-buttons" style="display:flex;gap:6px"></div>
+      </div>
+      <div style="min-width:240px">
+        <p style="margin:0 0 8px;font:500 13px/18px var(--font-sans);color:var(--grey-800)">Nombre d'options : <strong id="n-value" style="color:#fff">7</strong></p>
+        <input id="n-slider" type="range" min="2" max="14" value="7" style="width:240px">
+      </div>
+    </div>
+  </div>
+
+  <!-- bandeau règle appliquée -->
+  <div style="background:var(--background-alt-blue-france);border:1px solid var(--border-action-low-blue-france);border-top:none;padding:14px 26px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center">
+    <span style="font:700 13px/18px var(--font-sans);text-transform:uppercase;letter-spacing:.04em;color:var(--text-action-high-blue-france)">Règle appliquée</span>
+    <span id="rule-text" style="font:400 14px/20px var(--font-sans);color:var(--text-default-grey)"></span>
+  </div>
+
+  <!-- ===== CANVAS DE RENDU ===== -->
+  <div style="background:#fff;border:1px solid var(--border-default-grey);border-top:none;padding:8px 0 0">
+    <div style="padding:10px 26px;border-bottom:1px solid var(--grey-900);display:flex;align-items:center;gap:8px"><i class="ri-eye-line" style="color:var(--text-mention-grey)"></i><span id="zone-label" style="font:700 12px/1 var(--font-sans);text-transform:uppercase;letter-spacing:.04em;color:var(--text-mention-grey)"></span></div>
+    <div id="canvas" style="padding:34px 26px;min-height:160px"></div>
+  </div>
+
+  <p style="margin:18px 0 0;font:400 13px/20px var(--font-sans);color:var(--text-mention-grey)">Astuce : choisis le type et l'emplacement ci-dessus. En <strong>Secondaire</strong>, clique les cases / le toggle — le compteur de la <strong>Primaire</strong> et les tags de la <strong>Tertiaire</strong> suivent la même sélection.</p>
+
+</div>
+
+<script>
+"use strict";
+(function () {
+  // ───────────────────────── État ─────────────────────────
+  var S = {
+    type: 'multi', n: 7, longLabels: false, zone: 'secondaire', panelOpen: false,
+    sel: { multi: [0, 1], mono: 0, bool: true, text: 'recherche', date: { from: '2025-01-01', to: '2025-06-30' } }
+  };
+
+  // ──────────────────── Helper de création DOM ────────────────────
+  function h(tag, props) {
+    var el = document.createElement(tag);
+    if (props) {
+      for (var k in props) {
+        var v = props[k];
+        if (v == null) continue;
+        if (k === 'style') el.setAttribute('style', v);
+        else if (k.slice(0, 2) === 'on' && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
+        else el.setAttribute(k, v);
+      }
+    }
+    for (var i = 2; i < arguments.length; i++) {
+      var c = arguments[i];
+      if (c == null || c === false) continue;
+      if (Array.isArray(c)) c.forEach(function (n) { if (n != null && n !== false) el.appendChild(typeof n === 'string' ? document.createTextNode(n) : n); });
+      else el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    }
+    return el;
+  }
+  function icon(cls, style) { return h('i', { 'class': cls, style: style }); }
+
+  // ──────────────────── Données dérivées ────────────────────
+  function label(i) {
+    var num = String(i + 1).padStart(2, '0');
+    return S.longLabels ? ('Option dont le libellé est une phrase descriptive ' + num) : ('Valeur ' + num);
+  }
+  function options() { return Array.from({ length: S.n }, function (_, i) { return label(i); }); }
+
+  function fmtDate(d) {
+    var f = function (x) { if (!x) return ''; var p = x.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; };
+    if (d.from && d.to) return 'du ' + f(d.from) + ' au ' + f(d.to);
+    if (d.from) return 'depuis le ' + f(d.from);
+    if (d.to) return "jusqu'au " + f(d.to);
+    return '';
+  }
+
+  function seg(active) {
+    return active
+      ? 'height:34px;padding:0 14px;border:1px solid var(--blue-france-moon-625);background:var(--blue-france-moon-625);color:var(--grey-100);font:500 14px/1 var(--font-sans);cursor:pointer'
+      : 'height:34px;padding:0 14px;border:1px solid var(--grey-625);background:transparent;color:#fff;font:500 14px/1 var(--font-sans);cursor:pointer';
+  }
+
+  // ──────────────────── Actions ────────────────────
+  function setType(t) {
+    if ((t === 'text' || t === 'bool') && S.zone === 'primaire') S.zone = 'secondaire';
+    S.type = t; S.panelOpen = false; render();
+  }
+  function setZone(z) { S.zone = z; S.panelOpen = false; render(); }
+  function setLong(v) { S.longLabels = v; render(); }
+  function onN(e) {
+    var n = parseInt(e.target.value, 10);
+    S.n = n;
+    S.sel.multi = S.sel.multi.filter(function (i) { return i < n; });
+    S.sel.mono = (S.sel.mono != null && S.sel.mono < n) ? S.sel.mono : null;
+    render();
+  }
+  function togglePanel() { S.panelOpen = !S.panelOpen; render(); }
+  function toggleMulti(i) {
+    var a = S.sel.multi.slice(); var k = a.indexOf(i);
+    if (k >= 0) a.splice(k, 1); else a.push(i);
+    S.sel.multi = a; render();
+  }
+  function setMono(i) { S.sel.mono = (S.sel.mono === i) ? null : i; render(); }
+  function toggleBool() { S.sel.bool = !S.sel.bool; render(); }
+  function setText(e) { S.sel.text = e.target.value; render(); }
+  function setDate(field, e) { S.sel.date = Object.assign({}, S.sel.date); S.sel.date[field] = e.target.value; render(); }
+
+  // ──────────────────── Setup (construit une fois) ────────────────────
+  var typeDefs = [['text', 'Texte'], ['bool', 'Booléen'], ['mono', 'Monovalué'], ['multi', 'Multivalué'], ['date', 'Date']];
+  var zoneDefs = [['primaire', 'Primaire'], ['secondaire', 'Secondaire'], ['tertiaire', 'Tertiaire']];
+  var labelDefs = [[false, 'Courts'], [true, 'Longs']];
+  var typeBtns = [], zoneBtns = [], labelBtns = [];
+
+  function buildSetup() {
+    var tc = document.getElementById('type-buttons');
+    typeDefs.forEach(function (d) {
+      var b = h('button', { onClick: function () { setType(d[0]); } }, d[1]);
+      typeBtns.push({ el: b, key: d[0] }); tc.appendChild(b);
+    });
+    var zc = document.getElementById('zone-buttons');
+    zoneDefs.forEach(function (d) {
+      var b = h('button', { onClick: function () { setZone(d[0]); } }, d[1]);
+      zoneBtns.push({ el: b, key: d[0] }); zc.appendChild(b);
+    });
+    var lc = document.getElementById('label-buttons');
+    labelDefs.forEach(function (d) {
+      var b = h('button', { onClick: function () { setLong(d[0]); } }, d[1]);
+      labelBtns.push({ el: b, key: d[0] }); lc.appendChild(b);
+    });
+    document.getElementById('n-slider').addEventListener('input', onN);
+  }
+
+  // ──────────────────── Construction du canvas ────────────────────
+  function buildCanvas(vm) {
+    var nodes = [];
+
+    // PRIMAIRE — note (texte / booléen exposés directement)
+    if (vm.showPrimaireNote) {
+      nodes.push(h('p', { style: 'margin:0;font:400 16px/24px var(--font-sans);color:var(--text-mention-grey)' },
+        icon('ri-information-line', 'color:var(--text-action-high-blue-france);margin-right:6px'),
+        'Ce type est ',
+        h('strong', null, 'exposé directement'),
+        ' : pas de bouton primaire. Bascule sur ',
+        h('strong', null, 'Secondaire'),
+        ' pour le voir.'
+      ));
+    }
+
+    // PRIMAIRE — bouton replié
+    if (vm.showButton) {
+      var btnKids = [h('span', null, vm.buttonLabel)];
+      if (vm.buttonBadge !== '' && vm.buttonBadge !== 0) {
+        btnKids.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border-radius:var(--radius-full);background:var(--background-action-high-blue-france);color:#fff;font:700 12px/1 var(--font-sans)' }, String(vm.buttonBadge)));
+      }
+      btnKids.push(icon('ri-arrow-right-s-line', 'font-size:18px'));
+      nodes.push(h('button', { style: vm.buttonStyle, onClick: togglePanel }, btnKids));
+    }
+
+    // CONTRÔLE (secondaire, ou panneau ouvert en primaire)
+    if (vm.showControl) {
+      var inner = [];
+
+      if (vm.isText) {
+        inner.push(h('label', { style: 'display:block;font:700 16px/24px var(--font-sans);margin-bottom:8px' }, 'Libellé du filtre'));
+        inner.push(h('input', {
+          id: 'canvas-text', type: 'text', value: S.sel.text, placeholder: 'Saisir un terme…',
+          style: 'width:100%;max-width:380px;height:40px;padding:0 12px;border:none;background:var(--grey-975);box-shadow:inset 0 -2px 0 0 var(--grey-625);font:400 16px var(--font-sans);color:var(--text-default-grey)',
+          onInput: setText
+        }));
+      } else if (vm.isBool) {
+        inner.push(h('div', { style: 'display:flex;align-items:center;gap:12px' },
+          h('span', { style: 'font:400 16px/24px var(--font-sans)' }, 'Libellé du booléen'),
+          h('button', { role: 'switch', 'aria-checked': String(vm.boolOn), style: vm.boolTrackStyle, onClick: toggleBool },
+            h('span', { style: vm.boolThumbStyle }))
+        ));
+      } else if (vm.isDate) {
+        inner.push(h('p', { style: 'margin:0 0 8px;font:700 16px/24px var(--font-sans)' }, 'Libellé du filtre'));
+        inner.push(h('div', { style: 'display:flex;gap:14px;max-width:380px' },
+          h('div', { style: 'flex:1' },
+            h('label', { style: 'display:block;font:500 13px/20px var(--font-sans);margin-bottom:4px' }, 'Du'),
+            h('input', { id: 'canvas-date-from', type: 'date', value: S.sel.date.from, style: 'width:100%;height:40px;padding:0 10px;border:none;background:var(--grey-975);box-shadow:inset 0 -2px 0 0 var(--grey-625);font:400 14px var(--font-sans)', onInput: function (e) { setDate('from', e); } })),
+          h('div', { style: 'flex:1' },
+            h('label', { style: 'display:block;font:500 13px/20px var(--font-sans);margin-bottom:4px' }, 'Au'),
+            h('input', { id: 'canvas-date-to', type: 'date', value: S.sel.date.to, style: 'width:100%;height:40px;padding:0 10px;border:none;background:var(--grey-975);box-shadow:inset 0 -2px 0 0 var(--grey-625);font:400 14px var(--font-sans)', onInput: function (e) { setDate('to', e); } }))
+        ));
+      } else if (vm.isChoice) {
+        var values = h('div', { style: vm.valuesContainerStyle });
+        vm.optionItems.forEach(function (o) {
+          var box = h('span', { style: o.boxStyle });
+          if (o.showIcon) box.appendChild(icon(o.iconClass, o.iconStyle));
+          values.appendChild(h('button', { style: o.itemStyle, onClick: o.onToggle }, box, h('span', null, o.label)));
+        });
+        inner.push(h('div', { style: vm.groupWrapStyle },
+          h('span', { style: vm.groupLabelStyle }, 'Libellé du filtre'),
+          values
+        ));
+      }
+
+      nodes.push(h('div', { style: vm.controlWrapStyle }, inner));
+    }
+
+    // TERTIAIRE — tags récap
+    if (vm.showTags) {
+      if (vm.tags.length > 0) {
+        var wrap = h('div', { style: vm.tagsWrapStyle });
+        if (vm.tagsShowLabel) wrap.appendChild(h('span', { style: vm.tagsLabelStyle }, 'Libellé du filtre :'));
+        vm.tags.forEach(function (t) {
+          wrap.appendChild(h('span', { style: 'display:inline-flex;align-items:flex-start;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:18px;font:500 14px/20px var(--font-sans);max-width:100%' },
+            h('span', null, t.text),
+            h('button', { 'aria-label': 'Retirer', style: 'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:50%;background:transparent;color:inherit;cursor:pointer;flex:none', onClick: t.onRemove }, icon('ri-close-line', 'font-size:15px'))
+          ));
+        });
+        nodes.push(wrap);
+      } else {
+        nodes.push(h('p', { style: 'margin:0;font:400 16px/24px var(--font-sans);color:var(--text-mention-grey)' },
+          document.createTextNode('Aucune valeur sélectionnée. Bascule sur '),
+          h('strong', null, 'Secondaire'),
+          document.createTextNode(' pour en choisir.')
+        ));
+      }
+    }
+
+    return nodes;
+  }
+
+  // ──────────────────── Modèle de vue (mirroir de renderVals) ────────────────────
+  function compute() {
+    var isChoice = S.type === 'mono' || S.type === 'multi';
+    var isText = S.type === 'text', isBool = S.type === 'bool', isDate = S.type === 'date';
+
+    var valeursVertical = isChoice && (S.longLabels || S.n > 10);
+    var groupeLigne = isBool || (isChoice && S.n <= 3 && !S.longLabels);
+
+    var ruleText;
+    if (isText) ruleText = 'Groupe : bloc (label au-dessus) · Champ pleine largeur.';
+    else if (isBool) ruleText = 'Groupe : en ligne (label + interrupteur).';
+    else if (isDate) ruleText = 'Groupe : bloc · Deux champs Du / Au en ligne.';
+    else ruleText = 'Groupe : ' + (groupeLigne ? 'en ligne' : 'bloc') + ' · Valeurs : ' + (valeursVertical ? 'liste verticale' : 'inline-wrap (passage à la ligne)') + '.';
+
+    var zonePrimaire = S.zone === 'primaire', zoneSecondaire = S.zone === 'secondaire', zoneTertiaire = S.zone === 'tertiaire';
+    var exposedDirect = isText || isBool;
+    var showPrimaireNote = zonePrimaire && exposedDirect;
+    var showButton = zonePrimaire && !exposedDirect;
+    var showControl = zoneSecondaire || (zonePrimaire && S.panelOpen && !exposedDirect);
+    var showTags = zoneTertiaire;
+    var zoneLabel = zonePrimaire ? 'primaire' : zoneSecondaire ? 'secondaire' : 'tertiaire';
+
+    // bouton primaire
+    var buttonLabel = 'Libellé du filtre', buttonBadge = '';
+    if (S.type === 'multi') { buttonBadge = S.sel.multi.length || ''; }
+    else if (S.type === 'mono') { if (S.sel.mono != null) buttonLabel = 'Libellé : ' + label(S.sel.mono); }
+    else if (S.type === 'date') { var td = fmtDate(S.sel.date); if (td) buttonLabel = 'Libellé : ' + td; }
+    var renseigne = (S.type === 'multi' && S.sel.multi.length) || (S.type === 'mono' && S.sel.mono != null) || (S.type === 'date' && fmtDate(S.sel.date));
+    var buttonStyle = (renseigne || S.panelOpen)
+      ? 'display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;background:var(--background-action-low-blue-france);border:1px solid var(--border-action-high-blue-france);color:var(--text-action-high-blue-france);font:500 16px/24px var(--font-sans);cursor:pointer'
+      : 'display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;background:#fff;border:1px solid var(--border-action-low-blue-france);color:var(--text-action-high-blue-france);font:500 16px/24px var(--font-sans);cursor:pointer';
+
+    var controlWrapStyle = (zonePrimaire && S.panelOpen)
+      ? 'margin-top:10px;border:1px solid var(--border-default-grey);background:#fff;box-shadow:var(--raised-shadow);padding:22px;max-width:580px'
+      : '';
+
+    // interrupteur booléen
+    var boolOn = S.sel.bool;
+    var boolTrackStyle = boolOn
+      ? 'position:relative;width:40px;height:24px;border-radius:var(--radius-full);border:none;background:var(--background-action-high-blue-france);cursor:pointer;padding:0;flex:none'
+      : 'position:relative;width:40px;height:24px;border-radius:var(--radius-full);border:1px solid var(--border-action-high-blue-france);background:#fff;cursor:pointer;padding:0;flex:none';
+    var boolThumbStyle = boolOn
+      ? 'position:absolute;top:3px;left:19px;width:18px;height:18px;border-radius:50%;background:#fff'
+      : 'position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--background-action-high-blue-france)';
+
+    // groupe + valeurs (choix)
+    var groupWrapStyle = groupeLigne ? 'display:flex;align-items:baseline;gap:20px;flex-wrap:wrap' : 'display:block';
+    var groupLabelStyle = groupeLigne ? 'font:700 16px/24px var(--font-sans);flex:none' : 'display:block;font:700 16px/24px var(--font-sans);margin-bottom:12px';
+    var valuesContainerStyle = valeursVertical
+      ? 'display:flex;flex-direction:column;gap:14px;max-width:480px'
+      : 'display:flex;flex-wrap:wrap;gap:12px 22px;max-width:520px';
+
+    var isRadio = S.type === 'mono';
+    var boxBase = 'width:20px;height:20px;flex:none;display:inline-flex;align-items:center;justify-content:center;';
+    var optionItems = options().map(function (lab, i) {
+      var checked = isRadio ? S.sel.mono === i : S.sel.multi.indexOf(i) >= 0;
+      var boxStyle, showIcon = false, iconClass = '', iconStyle = '';
+      if (isRadio) {
+        boxStyle = boxBase + 'border-radius:50%;border:2px solid var(--border-action-high-blue-france);background:#fff;';
+        if (checked) { showIcon = true; iconClass = 'ri-circle-fill'; iconStyle = 'font-size:11px;color:var(--background-action-high-blue-france)'; }
+      } else {
+        if (checked) { boxStyle = boxBase + 'background:var(--background-action-high-blue-france);'; showIcon = true; iconClass = 'ri-check-line'; iconStyle = 'color:#fff;font-size:14px'; }
+        else boxStyle = boxBase + 'border:2px solid var(--border-action-high-blue-france);background:#fff;';
+      }
+      var itemStyle = 'display:inline-flex;align-items:' + (valeursVertical && S.longLabels ? 'flex-start' : 'center') + ';gap:8px;font:400 16px/' + (S.longLabels ? '22' : '24') + 'px var(--font-sans);background:none;border:none;padding:0;cursor:pointer;text-align:left;color:var(--text-default-grey)';
+      return { label: lab, boxStyle: boxStyle, showIcon: showIcon, iconClass: iconClass, iconStyle: iconStyle, itemStyle: itemStyle, onToggle: isRadio ? function () { setMono(i); } : function () { toggleMulti(i); } };
+    });
+
+    // tags tertiaire
+    var tags = [], tagsShowLabel = true;
+    if (S.type === 'text') { if (S.sel.text) tags = [{ text: '« ' + S.sel.text + ' »', onRemove: function () { S.sel.text = ''; render(); } }]; }
+    else if (S.type === 'bool') { tagsShowLabel = false; if (S.sel.bool) tags = [{ text: 'Libellé du booléen', onRemove: toggleBool }]; }
+    else if (S.type === 'date') { var t2 = fmtDate(S.sel.date); if (t2) tags = [{ text: t2, onRemove: function () { S.sel.date = { from: '', to: '' }; render(); } }]; }
+    else if (S.type === 'mono') { if (S.sel.mono != null) tags = [{ text: label(S.sel.mono), onRemove: function () { setMono(S.sel.mono); } }]; }
+    else { tags = S.sel.multi.slice().sort(function (a, b) { return a - b; }).map(function (i) { return { text: label(i), onRemove: function () { toggleMulti(i); } }; }); }
+
+    var tertiaireBloc = S.type === 'multi' && (tags.length >= 5 || S.longLabels);
+    var tagsWrapStyle = 'display:flex;flex-wrap:wrap;align-items:baseline;gap:8px';
+    var tagsLabelStyle = tertiaireBloc ? 'font:700 15px/20px var(--font-sans);flex-basis:100%' : 'font:700 15px/20px var(--font-sans);flex:none';
+
+    return {
+      isChoice: isChoice, isText: isText, isBool: isBool, isDate: isDate,
+      ruleText: ruleText, zoneLabel: zoneLabel,
+      showPrimaireNote: showPrimaireNote, showButton: showButton, showControl: showControl, showTags: showTags,
+      buttonLabel: buttonLabel, buttonBadge: buttonBadge, buttonStyle: buttonStyle, controlWrapStyle: controlWrapStyle,
+      boolOn: boolOn, boolTrackStyle: boolTrackStyle, boolThumbStyle: boolThumbStyle,
+      groupWrapStyle: groupWrapStyle, groupLabelStyle: groupLabelStyle, valuesContainerStyle: valuesContainerStyle, optionItems: optionItems,
+      tags: tags, tagsShowLabel: tagsShowLabel, tagsWrapStyle: tagsWrapStyle, tagsLabelStyle: tagsLabelStyle
+    };
+  }
+
+  // ──────────────────── Rendu ────────────────────
+  function render() {
+    var vm = compute();
+
+    // setup : restyle des boutons + visibilité des contrôles d'options
+    typeBtns.forEach(function (b) { b.el.setAttribute('style', seg(S.type === b.key)); });
+    zoneBtns.forEach(function (b) { b.el.setAttribute('style', seg(S.zone === b.key)); });
+    labelBtns.forEach(function (b) { b.el.setAttribute('style', seg(S.longLabels === b.key)); });
+    document.getElementById('options-controls').style.display = vm.isChoice ? '' : 'none';
+    document.getElementById('n-value').textContent = String(S.n);
+
+    // bandeau + entête de zone
+    document.getElementById('rule-text').textContent = vm.ruleText;
+    document.getElementById('zone-label').textContent = 'Rendu — zone ' + vm.zoneLabel;
+
+    // canvas : on mémorise le focus / le curseur pour les champs éditables
+    var canvas = document.getElementById('canvas');
+    var act = document.activeElement;
+    var focusId = (act && canvas.contains(act) && act.id) ? act.id : null;
+    var caret = (focusId === 'canvas-text') ? [act.selectionStart, act.selectionEnd] : null;
+
+    canvas.textContent = '';
+    buildCanvas(vm).forEach(function (n) { canvas.appendChild(n); });
+
+    if (focusId) {
+      var again = document.getElementById(focusId);
+      if (again) {
+        again.focus();
+        if (caret && again.setSelectionRange) { try { again.setSelectionRange(caret[0], caret[1]); } catch (e) {} }
+      }
+    }
+  }
+
+  buildSetup();
+  render();
+})();
+</script>
+</body>
+</html>

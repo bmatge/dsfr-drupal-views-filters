@@ -1,0 +1,215 @@
+/* ─────────────────────────────────────────────────────────────────
+   DSFR v1.14 — Design tokens
+   Système de Design de l'État Français
+   Source: dsfr v1.14 (GouvernementFR/dsfr) + Figma Fondamentaux
+   ─────────────────────────────────────────────────────────────────
+
+   Two layers:
+   1) Primitive tokens  → --blue-france-sun-113, --grey-200-plain, ...
+   2) Semantic tokens   → --text-title-blue-france, --background-action-high-blue-france, ...
+
+   Both are available; semantic tokens are what UI code should consume.
+*/
+
+/* ───── Font faces ─────
+   Marianne — the official typeface of the French State (SIG).
+   All six weights (Thin 100, Light 300, Regular 400, Medium 500, Bold 700,
+   ExtraBold 800) + italics are served from /fonts/.
+   Spectral (serif, for citations only) is still loaded from Google Fonts.
+*/
+@font-face { font-family: "Marianne"; font-weight: 100; font-style: normal;
+  src: url("fonts/Marianne-Thin.woff2") format("woff2"), url("fonts/Marianne-Thin.woff") format("woff"); font-display: swap; }
+@font-face { font-family: "Marianne"; font-weight: 100; font-style: italic;
+  src: url("fonts/Marianne-Thin_Italic.woff2") format("woff2"), url("fonts/Marianne-Thin_Italic.woff") format("woff"); font-display: swap; }
+
+@font-face { font-family: "Marianne"; font-weight: 300; font-style: normal;
+  src: url("fonts/Marianne-Light.woff2") format("woff2"), url("fonts/Marianne-Light.woff") format("woff"); font-display: swap; }
+@font-face { font-family: "Marianne"; font-weight: 300; font-style: italic;
+  src: url("fonts/Marianne-Light_Italic.woff2") format("woff2"), url("fonts/Marianne-Light_Italic.woff") format("woff"); font-display: swap; }
+
+@font-face { font-family: "Marianne"; font-weight: 400; font-style: normal;
+  src: url("fonts/Marianne-Regular.woff2") format("woff2"), url("fonts/Marianne-Regular.woff") format("woff"); font-display: swap; }
+@font-face { font-family: "Marianne"; font-weight: 400; font-style: italic;
+  src: url("fonts/Marianne-Regular_Italic.woff2") format("woff2"), url("fonts/Marianne-Regular_Italic.woff") format("woff"); font-display: swap; }
+
+@font-face { font-family: "Marianne"; font-weight: 500; font-style: normal;
+  src: url("fonts/Marianne-Medium.woff2") format("woff2"), url("fonts/Marianne-Medium.woff") format("woff"); font-display: swap; }
+@font-face { font-family: "Marianne"; font-weight: 500; font-style: italic;
+  src: url("fonts/Marianne-Medium_Italic.woff2") format("woff2"), url("fonts/Marianne-Medium_Italic.woff") format("woff"); font-display: swap; }
+
+@font-face { font-family: "Marianne"; font-weight: 700; font-style: normal;
+  src: url("fonts/Marianne-Bold.woff2") format("woff2"), url("fonts/Marianne-Bold.woff") format("woff"); font-display: swap; }
+@font-face { font-family: "Marianne"; font-weight: 700; font-style: italic;
+  src: url("fonts/Marianne-Bold_Italic.woff2") format("woff2"), url("fonts/Marianne-Bold_Italic.woff") format("woff"); font-display: swap; }
+
+@font-face { font-family: "Marianne"; font-weight: 800; font-style: normal;
+  src: url("fonts/Marianne-ExtraBold.woff2") format("woff2"), url("fonts/Marianne-ExtraBold.woff") format("woff"); font-display: swap; }
+@font-face { font-family: "Marianne"; font-weight: 800; font-style: italic;
+  src: url("fonts/Marianne-ExtraBold_Italic.woff2") format("woff2"), url("fonts/Marianne-ExtraBold_Italic.woff") format("woff"); font-display: swap; }
+
+/* Spectral — used only for citations (Quote component). Google Fonts. */
+@import url("https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,700;1,400&display=swap");
+
+:root {
+  /* ═══ PRIMITIVE COLORS ════════════════════════════════════════ */
+
+  /* Blue France — brand primary */
+  --blue-france-sun-113: #000091;
+  --blue-france-sun-113-hover: #1212ff;
+  --blue-france-sun-113-active: #2323ff;
+  --blue-france-moon-625: #8585f6;
+  --blue-france-925: #ececfe;
+  --blue-france-950: #e3e3fd;
+  --blue-france-975: #f5f5fe;
+
+  /* Red Marianne — brand accent */
+  --red-marianne-sun-425: #e1000f;
+  --red-marianne-sun-425-hover: #ff1a22;
+  --red-marianne-main-472: #c9191e;
+  --red-marianne-moon-625: #ff5655;
+  --red-marianne-925: #fee9e9;
+  --red-marianne-950: #fddede;
+  --red-marianne-975: #fef4f4;
+
+  /* Grey scale */
+  --grey-1000: #ffffff;
+  --grey-975: #f6f6f6;
+  --grey-950: #eeeeee;
+  --grey-925: #e5e5e5;
+  --grey-900: #dddddd;
+  --grey-850: #cecece;
+  --grey-800: #bfbfbf;
+  --grey-625: #929292;
+  --grey-425: #666666;
+  --grey-200: #3a3a3a;
+  --grey-100: #161616;
+  --grey-50:  #0a0a0a;
+
+  /* Utility / semantic intents */
+  --success-425: #18753c;
+  --success-main: #1f8d49;
+  --success-975: #dffee6;
+  --error-425: #ce0500;
+  --error-main: #ce0500;
+  --error-925: #ffe9e9;
+  --error-975: #fff4f4;
+  --warning-425: #b34000;
+  --warning-925: #fee9e6;
+  --warning-975: #fff4f3;
+  --info-425: #0063cb;
+  --info-925: #e8edff;
+  --info-975: #f4f6ff;
+
+  /* Focus ring */
+  --focus-ring: #0a76f6;
+
+  /* Shadow */
+  --raised-shadow: 0 2px 6px 0 rgba(0,0,18,0.16);
+  --overlap-shadow: 0 8px 16px 0 rgba(0,0,0,0.1), 0 8px 32px 0 rgba(0,0,0,0.32);
+  --hairline-bottom: inset 0 -1px 0 0 var(--grey-900);
+
+  /* ═══ SEMANTIC COLORS ════════════════════════════════════════ */
+
+  /* Text */
+  --text-default-grey: var(--grey-100);
+  --text-mention-grey: var(--grey-425);
+  --text-disabled-grey: var(--grey-625);
+  --text-inverted-grey: var(--grey-1000);
+  --text-title-grey: var(--grey-100);
+  --text-label-grey: var(--grey-100);
+
+  --text-action-high-blue-france: var(--blue-france-sun-113);
+  --text-title-blue-france: var(--blue-france-sun-113);
+
+  --text-default-error: var(--error-425);
+  --text-default-success: var(--success-425);
+  --text-default-warning: var(--warning-425);
+  --text-default-info: var(--info-425);
+
+  /* Background */
+  --background-default-grey: var(--grey-1000);
+  --background-alt-grey: var(--grey-975);
+  --background-contrast-grey: var(--grey-950);
+  --background-disabled-grey: var(--grey-925);
+
+  --background-action-high-blue-france: var(--blue-france-sun-113);
+  --background-action-high-blue-france-hover: var(--blue-france-sun-113-hover);
+  --background-action-high-blue-france-active: var(--blue-france-sun-113-active);
+  --background-action-low-blue-france: var(--blue-france-925);
+  --background-alt-blue-france: var(--blue-france-975);
+
+  --background-action-high-red-marianne: var(--red-marianne-sun-425);
+  --background-contrast-red-marianne: var(--red-marianne-925);
+
+  --background-contrast-success: var(--success-975);
+  --background-contrast-error: var(--error-975);
+  --background-contrast-warning: var(--warning-975);
+  --background-contrast-info: var(--info-975);
+
+  --background-overlap: rgba(22,22,22,0.64);
+
+  /* Border */
+  --border-default-grey: var(--grey-900);
+  --border-action-high-blue-france: var(--blue-france-sun-113);
+  --border-action-low-blue-france: var(--blue-france-950);
+  --border-default-error: var(--error-425);
+  --border-default-success: var(--success-425);
+  --border-default-warning: var(--warning-425);
+  --border-default-info: var(--info-425);
+
+  /* ═══ TYPE — FAMILIES & PRIMITIVES ══════════════════════════════ */
+  --font-sans: "Marianne", "Marianne Substitute", system-ui, -apple-system, Arial, sans-serif;
+  --font-serif: "Spectral", Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Type scale (px / line-height px) */
+  --text-xs:    12px;   --lh-xs: 20px;
+  --text-sm:    14px;   --lh-sm: 24px;
+  --text-md:    16px;   --lh-md: 24px;
+  --text-lg:    18px;   --lh-lg: 28px;
+  --text-xl:    20px;   --lh-xl: 28px;
+  --text-2xl:   22px;   --lh-2xl: 28px;
+  --text-3xl:   24px;   --lh-3xl: 32px;
+  --text-4xl:   28px;   --lh-4xl: 36px;
+  --text-5xl:   32px;   --lh-5xl: 40px;
+  --text-6xl:   40px;   --lh-6xl: 48px;
+  --text-display: 48px; --lh-display: 56px;
+
+  /* ═══ SPACING (4 px base grid) ═══════════════════════════════ */
+  --v-1: 4px;   --v-2: 8px;   --v-3: 12px;  --v-4: 16px;
+  --v-5: 20px;  --v-6: 24px;  --v-7: 28px;  --v-8: 32px;
+  --v-9: 36px;  --v-10: 40px; --v-12: 48px; --v-16: 64px;
+  /* Larger "w" scale used for section rhythm */
+  --w-6: 48px;  --w-8: 64px;  --w-12: 96px; --w-16: 128px;
+
+  /* ═══ RADII ════════════════════════════════════════════════ */
+  --radius-none: 0;
+  --radius-sm: 2px;   /* tags */
+  --radius-md: 4px;   /* switch thumb */
+  --radius-full: 9999px;
+}
+
+/* ───── SEMANTIC TYPE ROLES ───── */
+.fr-display-xl { font: 700 48px/56px var(--font-sans); color: var(--text-title-grey); letter-spacing: -0.01em; }
+.fr-display-lg { font: 700 40px/48px var(--font-sans); color: var(--text-title-grey); }
+.fr-h1 { font: 700 40px/48px var(--font-sans); color: var(--text-title-grey); }
+.fr-h2 { font: 700 32px/40px var(--font-sans); color: var(--text-title-grey); }
+.fr-h3 { font: 700 28px/36px var(--font-sans); color: var(--text-title-grey); }
+.fr-h4 { font: 700 24px/32px var(--font-sans); color: var(--text-title-grey); }
+.fr-h5 { font: 700 22px/28px var(--font-sans); color: var(--text-title-grey); }
+.fr-h6 { font: 700 20px/28px var(--font-sans); color: var(--text-title-grey); }
+.fr-text--lead { font: 400 20px/32px var(--font-sans); color: var(--text-default-grey); }
+.fr-text--lg   { font: 400 18px/28px var(--font-sans); color: var(--text-default-grey); }
+.fr-text       { font: 400 16px/24px var(--font-sans); color: var(--text-default-grey); }
+.fr-text--sm   { font: 400 14px/24px var(--font-sans); color: var(--text-default-grey); }
+.fr-text--xs   { font: 400 12px/20px var(--font-sans); color: var(--text-mention-grey); }
+.fr-quote      { font: 700 32px/40px var(--font-serif); color: var(--text-title-grey); }
+.fr-quote-attr { font: 400 14px/24px var(--font-serif); color: var(--text-mention-grey); }
+.fr-label      { font: 500 14px/24px var(--font-sans); color: var(--text-label-grey); }
+.fr-hint       { font: 400 12px/20px var(--font-sans); color: var(--text-mention-grey); }
+
+/* Base resets */
+html, body { font-family: var(--font-sans); color: var(--text-default-grey); background: var(--background-default-grey); }
+a { color: var(--text-action-high-blue-france); text-decoration: underline; text-underline-offset: 2px; }
+a:hover { color: var(--blue-france-sun-113-hover); }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
