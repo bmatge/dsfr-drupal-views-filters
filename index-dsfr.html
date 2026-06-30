@@ -25,6 +25,19 @@
 
   /* Bascule entre les deux pages, en haut à droite sur les deux pages */
   .page-switch{position:fixed;top:16px;right:16px;z-index:1000}
+
+  /* ───── Disclose de paramétrage : grille responsive ───── */
+  .setup-head,.setup-row{display:grid;grid-template-columns:140px 1fr 130px 130px 36px;gap:14px;align-items:center}
+  .setup-row{padding:10px 0;border-bottom:1px solid var(--grey-200)}
+  .setup-cell{min-width:0}
+  .setup-mlabel{display:none}
+  @media (max-width:640px){
+    .page-wrap{padding-top:72px!important}
+    .setup-head{display:none}
+    .setup-row{grid-template-columns:1fr;gap:12px;align-items:stretch;position:relative;padding:18px 0}
+    .setup-cell--del{position:absolute;top:14px;right:0}
+    .setup-mlabel{display:block;margin-bottom:6px;font:500 11px/16px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--grey-800)}
+  }
 </style>
 </head>
 <body>
@@ -34,7 +47,7 @@
   Version prototype
 </a>
 
-<div class="fr-container fr-py-6w" style="max-width:1100px">
+<div class="fr-container fr-py-6w page-wrap" style="max-width:1100px">
 
   <!-- ===== DISCLOSE : LISTE DES FILTRES À SIMULER (custom, autorisé) ===== -->
   <details id="setup-disclose" open style="background:var(--grey-100);color:#fff;margin-bottom:36px">
@@ -46,7 +59,7 @@
       </span>
     </summary>
     <div style="padding:0 26px 24px">
-      <div style="display:grid;grid-template-columns:140px 1fr 130px 130px 36px;gap:14px;padding:0 0 8px;border-bottom:1px solid var(--grey-200);font:500 11px/16px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--grey-800)">
+      <div class="setup-head" style="padding:0 0 8px;border-bottom:1px solid var(--grey-200);font:500 11px/16px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--grey-800)">
         <span>Type</span>
         <span>Caractéristiques</span>
         <span>Zone</span>
@@ -267,9 +280,18 @@
       onClick: function () { removeRow(it.id); }
     }, h('i', { 'class': 'fr-icon-close-line', 'aria-hidden': 'true' }));
 
-    return h('div', {
-      style: 'display:grid;grid-template-columns:140px 1fr 130px 130px 36px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--grey-200)'
-    }, typeSel, carac, zoneSel, tertCell, del);
+    function cell(mlabel, content, mod) {
+      return h('div', { 'class': 'setup-cell' + (mod ? ' setup-cell--' + mod : '') },
+        mlabel ? h('span', { 'class': 'setup-mlabel' }, mlabel) : null,
+        content);
+    }
+
+    return h('div', { 'class': 'setup-row' },
+      cell('Type', typeSel),
+      cell('Caractéristiques', carac),
+      cell('Zone', zoneSel),
+      cell('Récap tertiaire', tertCell),
+      cell(null, del, 'del'));
   }
 
   // ──────────────────── Layout des valeurs exposées ────────────────────

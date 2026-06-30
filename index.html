@@ -18,11 +18,24 @@
   #side-panel{position:fixed;top:0;right:0;bottom:0;width:min(480px,92vw);background:#fff;z-index:91;display:flex;flex-direction:column;box-shadow:-4px 0 18px rgba(0,0,0,.18)}
   .page-switch{position:fixed;top:16px;right:16px;z-index:1000;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;background:#fff;border:1px solid var(--border-action-high-blue-france);color:var(--text-action-high-blue-france);font:500 14px/1 var(--font-sans);text-decoration:none;cursor:pointer}
   .page-switch:hover{background:var(--background-action-low-blue-france)}
+
+  /* ───── Disclose de paramétrage : grille responsive ───── */
+  .setup-head,.setup-row{display:grid;grid-template-columns:140px 1fr 130px 130px 36px;gap:14px;align-items:center}
+  .setup-row{padding:10px 0;border-bottom:1px solid var(--grey-200)}
+  .setup-cell{min-width:0}
+  .setup-mlabel{display:none}
+  @media (max-width:640px){
+    .page-wrap{padding:72px 16px 96px!important}
+    .setup-head{display:none}
+    .setup-row{grid-template-columns:1fr;gap:12px;align-items:stretch;position:relative;padding:18px 0}
+    .setup-cell--del{position:absolute;top:14px;right:0}
+    .setup-mlabel{display:block;margin-bottom:6px;font:500 11px/16px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--grey-800)}
+  }
 </style>
 </head>
 <body>
 <a class="page-switch" href="index-dsfr.html">Version DSFR natif<i class="ri-arrow-right-line"></i></a>
-<div style="max-width:1100px;margin:0 auto;padding:44px 24px 120px">
+<div class="page-wrap" style="max-width:1100px;margin:0 auto;padding:44px 24px 120px">
 
   <!-- ===== DISCLOSE : LISTE DES FILTRES À SIMULER ===== -->
   <details id="setup-disclose" open style="background:var(--grey-100);color:#fff;margin-bottom:36px">
@@ -34,7 +47,7 @@
       </span>
     </summary>
     <div style="padding:0 26px 24px">
-      <div style="display:grid;grid-template-columns:140px 1fr 130px 130px 36px;gap:14px;padding:0 0 8px;border-bottom:1px solid var(--grey-200);font:500 11px/16px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--grey-800)">
+      <div class="setup-head" style="padding:0 0 8px;border-bottom:1px solid var(--grey-200);font:500 11px/16px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--grey-800)">
         <span>Type</span>
         <span>Caractéristiques</span>
         <span>Zone</span>
@@ -254,9 +267,18 @@
       onClick: function () { removeRow(it.id); }
     }, icon('ri-close-line', 'font-size:18px'));
 
-    return h('div', {
-      style: 'display:grid;grid-template-columns:140px 1fr 130px 130px 36px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--grey-200)'
-    }, typeSel, carac, zoneSel, tertCell, del);
+    function cell(mlabel, content, mod) {
+      return h('div', { 'class': 'setup-cell' + (mod ? ' setup-cell--' + mod : '') },
+        mlabel ? h('span', { 'class': 'setup-mlabel' }, mlabel) : null,
+        content);
+    }
+
+    return h('div', { 'class': 'setup-row' },
+      cell('Type', typeSel),
+      cell('Caractéristiques', carac),
+      cell('Zone', zoneSel),
+      cell('Récap tertiaire', tertCell),
+      cell(null, del, 'del'));
   }
 
   // ──────────────────── Calcul de layout pour input exposé ────────────────────
