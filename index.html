@@ -16,8 +16,14 @@
   #setup-disclose[open] #disclose-chevron{transform:rotate(180deg)}
   #side-panel-backdrop{position:fixed;inset:0;background:rgba(22,22,22,.5);z-index:90}
   #side-panel{position:fixed;top:0;right:0;bottom:0;width:min(480px,92vw);background:#fff;z-index:91;display:flex;flex-direction:column;box-shadow:-4px 0 18px rgba(0,0,0,.18)}
-  .page-switch{position:fixed;top:16px;right:16px;z-index:1000;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;background:#fff;border:1px solid var(--border-action-high-blue-france);color:var(--text-action-high-blue-france);font:500 14px/1 var(--font-sans);text-decoration:none;cursor:pointer}
-  .page-switch:hover{background:var(--background-action-low-blue-france)}
+  /* ───── Micro-header : bascule entre les deux rendus + reset ───── */
+  .micro-header{position:sticky;top:0;z-index:1000;display:flex;align-items:center;gap:2px;height:46px;padding:0 16px;background:#fff;border-bottom:1px solid var(--border-default-grey)}
+  .mh-link{display:inline-flex;align-items:center;height:30px;padding:0 12px;font:500 14px/1 var(--font-sans);text-decoration:none;color:var(--text-action-high-blue-france);border-bottom:2px solid transparent}
+  .mh-link:hover{background:var(--background-action-low-blue-france)}
+  .mh-link[aria-current="page"]{color:var(--text-title-grey);border-bottom-color:var(--blue-france-sun-113);font-weight:700}
+  .mh-sep{width:1px;height:20px;background:var(--border-default-grey);margin:0 10px}
+  .mh-reset{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;background:none;border:1px solid var(--border-default-grey);color:var(--text-action-high-blue-france);font:500 14px/1 var(--font-sans);cursor:pointer}
+  .mh-reset:hover{background:var(--background-action-low-blue-france)}
 
   /* ───── Disclose de paramétrage : grille responsive ───── */
   .setup-head,.setup-row{display:grid;grid-template-columns:140px 1fr 130px 130px 36px;gap:14px;align-items:center}
@@ -25,16 +31,25 @@
   .setup-cell{min-width:0}
   .setup-mlabel{display:none}
   @media (max-width:640px){
-    .page-wrap{padding:72px 16px 96px!important}
+    .page-wrap{padding:32px 16px 96px!important}
     .setup-head{display:none}
-    .setup-row{grid-template-columns:1fr;gap:12px;align-items:stretch;position:relative;padding:18px 0}
-    .setup-cell--del{position:absolute;top:14px;right:0}
+    .setup-row{grid-template-columns:1fr;gap:14px;align-items:stretch;padding:16px;margin-bottom:12px;border:1px solid var(--grey-200);background:rgba(255,255,255,.04)}
     .setup-mlabel{display:block;margin-bottom:6px;font:500 11px/16px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--grey-800)}
+    .setup-cell--del{margin-top:2px}
+    .setup-cell--del button{width:100%!important;height:42px!important;justify-content:center;border:1px solid var(--grey-625)!important;gap:8px}
+    .setup-cell--del button::after{content:'Supprimer la ligne';font:500 14px/1 var(--font-sans);color:var(--grey-800)}
   }
 </style>
 </head>
 <body>
-<a class="page-switch" href="index-dsfr.html">Version DSFR natif<i class="ri-arrow-right-line"></i></a>
+<header class="micro-header">
+  <a class="mh-link" href="index.html" aria-current="page">Styles inline</a>
+  <a class="mh-link" href="index-dsfr.html">Classes DSFR</a>
+  <span class="mh-sep" aria-hidden="true"></span>
+  <button type="button" id="reset-config" class="mh-reset" title="Réinitialiser la configuration des filtres">
+    <i class="ri-refresh-line"></i>Réinitialiser
+  </button>
+</header>
 <div class="page-wrap" style="max-width:1100px;margin:0 auto;padding:44px 24px 120px">
 
   <!-- ===== DISCLOSE : LISTE DES FILTRES À SIMULER ===== -->
@@ -506,16 +521,17 @@
     var body = document.getElementById('preview-body');
     body.textContent = '';
 
-    var secTexts   = S.items.filter(function (it) { return it.zone === 'secondaire' && it.type === 'text'; });
-    var primItems  = S.items.filter(function (it) { return it.zone === 'primaire'; });
+    // le champ texte (barre de recherche) est toujours rendu en premier, quelle que soit sa zone
+    var textItems  = S.items.filter(function (it) { return it.type === 'text'; });
+    var primItems  = S.items.filter(function (it) { return it.zone === 'primaire' && it.type !== 'text'; });
     var secOthers  = S.items.filter(function (it) { return it.zone === 'secondaire' && it.type !== 'text'; });
     var tertItems  = S.items.filter(function (it) { return it.tertiary; });
-    var totalShown = secTexts.length + primItems.length + secOthers.length;
+    var totalShown = textItems.length + primItems.length + secOthers.length;
 
     if (totalShown === 0) {
       body.appendChild(emptyMsg('Aucun filtre configuré. Ouvre les réglages pour en ajouter.'));
     } else {
-      secTexts.forEach(function (it) {
+      textItems.forEach(function (it) {
         body.appendChild(buildControl(it, { context: 'sec', fullWidth: true }));
       });
       if (primItems.length > 0) {
@@ -559,26 +575,59 @@
         if (caret && again.setSelectionRange) { try { again.setSelectionRange(caret[0], caret[1]); } catch (e) {} }
       }
     }
+
+    persist();
+  }
+
+  // ──────────────────── Persistance (localStorage, partagée entre les deux rendus) ────────────────────
+  var LS_KEY = 'dsfr-filters-sandbox';
+  function persist() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify({ nextId: S.nextId, items: S.items, values: S.values })); }
+    catch (e) {}
+  }
+  function restore() {
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if (!raw) return false;
+      var d = JSON.parse(raw);
+      if (!d || !Array.isArray(d.items) || d.items.length === 0) return false;
+      S.items = d.items;
+      S.values = d.values || {};
+      var maxId = 0;
+      S.items.forEach(function (it) {
+        if (it.id > maxId) maxId = it.id;
+        if (!S.values[it.id]) S.values[it.id] = defaultValues();
+      });
+      S.nextId = (d.nextId && d.nextId > maxId) ? d.nextId : maxId + 1;
+      return true;
+    } catch (e) { return false; }
+  }
+  function resetConfig() {
+    try { localStorage.removeItem(LS_KEY); } catch (e) {}
+    location.reload();
   }
 
   // ──────────────────── Bootstrap ────────────────────
   document.getElementById('add-row').addEventListener('click', addRow);
+  document.getElementById('reset-config').addEventListener('click', resetConfig);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && S.openPanelId != null) closePanel(); });
 
-  // jeu d'exemple par défaut (proche du Test_refonte_Vue_portail)
-  var seed = [
-    { type: 'text',  n: 0, longLabels: false, zone: 'secondaire', tertiary: false },
-    { type: 'multi', n: 7, longLabels: false, zone: 'primaire',   tertiary: true  },
-    { type: 'mono',  n: 4, longLabels: false, zone: 'primaire',   tertiary: true  },
-    { type: 'multi', n: 5, longLabels: false, zone: 'primaire',   tertiary: false },
-    { type: 'date',  n: 0, longLabels: false, zone: 'primaire',   tertiary: false },
-    { type: 'bool',  n: 0, longLabels: false, zone: 'secondaire', tertiary: false }
-  ];
-  seed.forEach(function (cfg) {
-    var id = S.nextId++;
-    S.items.push({ id: id, type: cfg.type, n: cfg.n || 5, longLabels: cfg.longLabels, zone: cfg.zone, tertiary: cfg.tertiary });
-    S.values[id] = defaultValues();
-  });
+  // configuration restaurée depuis localStorage, ou jeu d'exemple par défaut (proche du Test_refonte_Vue_portail)
+  if (!restore()) {
+    var seed = [
+      { type: 'text',  n: 0, longLabels: false, zone: 'primaire',   tertiary: false },
+      { type: 'multi', n: 7, longLabels: false, zone: 'primaire',   tertiary: true  },
+      { type: 'mono',  n: 4, longLabels: false, zone: 'primaire',   tertiary: true  },
+      { type: 'multi', n: 5, longLabels: false, zone: 'primaire',   tertiary: false },
+      { type: 'date',  n: 0, longLabels: false, zone: 'primaire',   tertiary: false },
+      { type: 'bool',  n: 0, longLabels: false, zone: 'secondaire', tertiary: false }
+    ];
+    seed.forEach(function (cfg) {
+      var id = S.nextId++;
+      S.items.push({ id: id, type: cfg.type, n: cfg.n || 5, longLabels: cfg.longLabels, zone: cfg.zone, tertiary: cfg.tertiary });
+      S.values[id] = defaultValues();
+    });
+  }
 
   render();
 })();
