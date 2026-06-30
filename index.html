@@ -12,74 +12,65 @@
   button{font-family:inherit}
   input,select{font-family:inherit}
   input[type=range]{accent-color:var(--blue-france-sun-113)}
+  #setup-disclose summary::-webkit-details-marker{display:none}
+  #setup-disclose[open] #disclose-chevron{transform:rotate(180deg)}
+  #side-panel-backdrop{position:fixed;inset:0;background:rgba(22,22,22,.5);z-index:90}
+  #side-panel{position:fixed;top:0;right:0;bottom:0;width:min(480px,92vw);background:#fff;z-index:91;display:flex;flex-direction:column;box-shadow:-4px 0 18px rgba(0,0,0,.18)}
 </style>
 </head>
 <body>
 <div style="max-width:1100px;margin:0 auto;padding:44px 24px 120px">
 
   <p style="margin:0 0 6px;font:700 13px/18px var(--font-sans);text-transform:uppercase;letter-spacing:.06em;color:var(--text-action-high-blue-france)">Prototype interactif · DSFR</p>
-  <h1 style="margin:0 0 26px;font:700 36px/44px var(--font-sans);color:var(--text-title-grey);letter-spacing:-.01em">Filtres exposés — bac à sable</h1>
+  <h1 style="margin:0 0 18px;font:700 40px/48px var(--font-sans);color:var(--text-title-grey);letter-spacing:-.01em">Titre 1</h1>
+  <p class="fr-text--lead" style="margin:0 0 36px;max-width:780px">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque porta lorem eget elit accumsan dignissim. Nunc urna nisi, porttitor sit amet pharetra vel, egestas sit amet enim. In quam quam, rhoncus vel velit quis, malesuada gravida nulla.</p>
 
-  <!-- ===== ZONE DE SETUP : LISTE D'ÉLÉMENTS ===== -->
-  <div style="background:var(--grey-100);color:#fff;padding:24px 26px">
-    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:18px">
-      <p style="margin:0;font:700 13px/18px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--blue-france-moon-625);display:flex;align-items:center;gap:8px"><i class="ri-settings-3-line"></i>Liste des filtres à simuler</p>
-      <span id="items-count" style="font:400 12px/18px var(--font-sans);color:var(--grey-800)"></span>
-    </div>
-
-    <!-- en-têtes de colonne -->
-    <div style="display:grid;grid-template-columns:140px 1fr 130px 36px;gap:14px;padding:0 0 8px;border-bottom:1px solid var(--grey-200);font:500 11px/16px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--grey-800)">
-      <span>Type</span>
-      <span>Caractéristiques</span>
-      <span>Zone</span>
-      <span></span>
-    </div>
-
-    <div id="rows" style="display:flex;flex-direction:column"></div>
-
-    <button id="add-row" style="margin-top:16px;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;background:transparent;border:1px dashed var(--grey-625);color:#fff;font:500 14px/1 var(--font-sans);cursor:pointer">
-      <i class="ri-add-line"></i>Ajouter une ligne
-    </button>
-  </div>
-
-  <!-- ===== CANVAS DE RENDU ===== -->
-  <div style="background:#fff;border:1px solid var(--border-default-grey);border-top:none">
-
-    <!-- PRIMAIRE -->
-    <div style="border-bottom:1px solid var(--grey-900)">
-      <div style="padding:10px 26px;background:var(--background-alt-blue-france);display:flex;align-items:center;gap:10px">
-        <span style="width:22px;height:22px;border-radius:50%;background:var(--background-action-high-blue-france);color:#fff;display:inline-flex;align-items:center;justify-content:center;font:700 12px/1 var(--font-sans)">1</span>
-        <span style="font:700 12px/1 var(--font-sans);text-transform:uppercase;letter-spacing:.04em;color:var(--text-action-high-blue-france)">Zone primaire — boutons</span>
+  <!-- ===== DISCLOSE : LISTE DES FILTRES À SIMULER ===== -->
+  <details id="setup-disclose" open style="background:var(--grey-100);color:#fff;margin-bottom:36px">
+    <summary style="list-style:none;cursor:pointer;padding:18px 26px;display:flex;align-items:center;justify-content:space-between;gap:16px;user-select:none">
+      <span style="display:flex;align-items:center;gap:10px;font:700 13px/18px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--blue-france-moon-625)"><i class="ri-settings-3-line"></i>Liste des filtres à simuler</span>
+      <span style="display:flex;align-items:center;gap:14px">
+        <span id="items-count" style="font:400 12px/18px var(--font-sans);color:var(--grey-800)"></span>
+        <i class="ri-arrow-down-s-line" id="disclose-chevron" style="font-size:22px;color:var(--grey-800);transition:transform .15s"></i>
+      </span>
+    </summary>
+    <div style="padding:0 26px 24px">
+      <div style="display:grid;grid-template-columns:140px 1fr 130px 36px;gap:14px;padding:0 0 8px;border-bottom:1px solid var(--grey-200);font:500 11px/16px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--grey-800)">
+        <span>Type</span>
+        <span>Caractéristiques</span>
+        <span>Zone</span>
+        <span></span>
       </div>
-      <div id="zone-primaire" style="padding:22px 26px;min-height:80px"></div>
-      <div id="zone-primaire-panel" style="padding:0 26px"></div>
+      <div id="rows" style="display:flex;flex-direction:column"></div>
+      <button id="add-row" style="margin-top:16px;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;background:transparent;border:1px dashed var(--grey-625);color:#fff;font:500 14px/1 var(--font-sans);cursor:pointer">
+        <i class="ri-add-line"></i>Ajouter une ligne
+      </button>
     </div>
+  </details>
 
-    <!-- SECONDAIRE -->
-    <div style="border-bottom:1px solid var(--grey-900)">
-      <div style="padding:10px 26px;background:var(--grey-975);display:flex;align-items:center;gap:10px">
-        <span style="width:22px;height:22px;border-radius:50%;background:var(--background-action-high-blue-france);color:#fff;display:inline-flex;align-items:center;justify-content:center;font:700 12px/1 var(--font-sans)">2</span>
-        <span style="font:700 12px/1 var(--font-sans);text-transform:uppercase;letter-spacing:.04em;color:var(--text-mention-grey)">Zone secondaire — inputs exposés</span>
-      </div>
-      <div id="zone-secondaire" style="padding:22px 26px;min-height:80px;display:flex;flex-direction:column;gap:22px"></div>
+  <!-- ===== PREVIEW : Affiner votre recherche (façon prod) ===== -->
+  <section style="background:#fff;border:1px solid var(--border-default-grey)">
+    <header style="padding:18px 26px;border-bottom:1px solid var(--grey-900)">
+      <h2 style="margin:0;font:700 22px/30px var(--font-sans);color:var(--text-title-grey)">Affiner votre recherche</h2>
+    </header>
+
+    <div id="preview-body" style="padding:24px 26px;display:flex;flex-direction:column;gap:22px"></div>
+
+    <div style="padding:18px 26px;border-top:1px solid var(--grey-900);display:flex;justify-content:flex-end">
+      <button id="search-cta" style="display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 22px;background:var(--background-action-high-blue-france);border:none;color:#fff;font:500 16px/1 var(--font-sans);cursor:pointer">
+        <i class="ri-search-line"></i>Rechercher
+      </button>
     </div>
-
-    <!-- TERTIAIRE -->
-    <div>
-      <div style="padding:10px 26px;background:var(--grey-975);display:flex;align-items:center;gap:10px">
-        <span style="width:22px;height:22px;border-radius:50%;background:var(--background-action-high-blue-france);color:#fff;display:inline-flex;align-items:center;justify-content:center;font:700 12px/1 var(--font-sans)">3</span>
-        <span style="font:700 12px/1 var(--font-sans);text-transform:uppercase;letter-spacing:.04em;color:var(--text-mention-grey)">Zone tertiaire — récap tags</span>
-      </div>
-      <div id="zone-tertiaire" style="padding:22px 26px;min-height:80px;display:flex;flex-direction:column;gap:16px"></div>
-    </div>
-
-  </div>
+  </section>
 
   <p style="margin:18px 0 0;font:400 13px/20px var(--font-sans);color:var(--text-mention-grey)">
-    Astuce : ajoute autant de lignes que tu veux et répartis-les entre les zones. Les choix faits dans la <strong>zone secondaire</strong> alimentent automatiquement le badge du bouton <strong>primaire</strong> et les tags <strong>tertiaires</strong> du même filtre.
+    Astuce : ouvre les <strong>réglages</strong> en haut pour ajouter/retirer des filtres et changer leur zone d'affichage. Les boutons <strong>primaires</strong> ouvrent un panneau latéral, les inputs <strong>secondaires</strong> sont exposés directement, et la <strong>zone tertiaire</strong> reprend les valeurs sélectionnées en tags.
   </p>
 
 </div>
+
+<!-- ===== PANNEAU LATÉRAL (rendu conditionnel) ===== -->
+<div id="side-panel-host"></div>
 
 <script>
 "use strict";
@@ -93,11 +84,11 @@
   };
 
   var TYPES = [
-    { key: 'multi', label: 'Multivalué', hasN: true },
-    { key: 'mono',  label: 'Monovalué',  hasN: true },
-    { key: 'date',  label: 'Date',       hasN: false },
-    { key: 'text',  label: 'Texte',      hasN: false },
-    { key: 'bool',  label: 'Booléen',    hasN: false }
+    { key: 'multi', label: 'Multivalué' },
+    { key: 'mono',  label: 'Monovalué' },
+    { key: 'date',  label: 'Date' },
+    { key: 'text',  label: 'Texte' },
+    { key: 'bool',  label: 'Booléen' }
   ];
   var ZONES = [
     { key: 'primaire',   label: 'Primaire' },
@@ -129,7 +120,7 @@
 
   // ──────────────────── Données dérivées ────────────────────
   function defaultValues() {
-    return { multi: [], mono: null, bool: true, text: '', date: { from: '', to: '' } };
+    return { multi: [], mono: null, bool: false, text: '', date: { from: '', to: '' } };
   }
   function label(it, i) {
     var num = String(i + 1).padStart(2, '0');
@@ -149,14 +140,12 @@
     if (d.to) return "jusqu'au " + f(d.to);
     return '';
   }
-  function isExposed(it) { return it.type === 'text' || it.type === 'bool'; }
 
   // ──────────────────── Actions ────────────────────
   function addRow() {
     var id = S.nextId++;
     S.items.push({ id: id, type: 'multi', n: 5, longLabels: false, zone: 'primaire' });
     S.values[id] = defaultValues();
-    S.openPanelId = null;
     render();
   }
   function removeRow(id) {
@@ -170,9 +159,7 @@
     if (!it) return;
     if (prop === 'type') {
       S.values[id] = defaultValues();
-      if ((value === 'text' || value === 'bool') && it.zone === 'primaire') it.zone = 'secondaire';
-      // valeurs par défaut raisonnables par type
-      if (value === 'multi' || value === 'mono') it.n = it.n || 5;
+      if ((value === 'multi' || value === 'mono') && !it.n) it.n = 5;
     }
     if (prop === 'n') {
       value = Math.max(2, Math.min(14, parseInt(value, 10) || 2));
@@ -184,7 +171,8 @@
     if (S.openPanelId !== id) S.openPanelId = null;
     render();
   }
-  function togglePanel(id) { S.openPanelId = (S.openPanelId === id) ? null : id; render(); }
+  function openPanel(id) { S.openPanelId = id; render(); }
+  function closePanel() { S.openPanelId = null; render(); }
   function toggleMulti(id, i) {
     var v = S.values[id]; var a = v.multi.slice(); var k = a.indexOf(i);
     if (k >= 0) a.splice(k, 1); else a.push(i);
@@ -195,11 +183,11 @@
   function setText(id, e) { S.values[id].text = e.target.value; render(); }
   function setDate(id, field, e) { S.values[id].date = Object.assign({}, S.values[id].date); S.values[id].date[field] = e.target.value; render(); }
 
-  // ──────────────────── Setup : ligne ────────────────────
+  // ──────────────────── Setup : ligne du disclose ────────────────────
   function selectStyle() {
     return 'height:34px;padding:0 28px 0 10px;border:1px solid var(--grey-625);background:var(--grey-100) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cpath fill=%27%23fff%27 d=%27M7 10l5 5 5-5z%27/%3E%3C/svg%3E") right 4px center/18px no-repeat;color:#fff;font:500 14px/1 var(--font-sans);cursor:pointer;-webkit-appearance:none;-moz-appearance:none;appearance:none';
   }
-  function buildRow(it, idx) {
+  function buildRow(it) {
     var typeSel = h('select', {
       style: selectStyle() + ';width:100%',
       onChange: function (e) { setProp(it.id, 'type', e.target.value); }
@@ -210,7 +198,6 @@
       typeSel.appendChild(opt);
     });
 
-    // Caractéristiques (n + longLabels) — visible uniquement pour multi / mono
     var carac;
     if (it.type === 'multi' || it.type === 'mono') {
       carac = h('div', { style: 'display:flex;align-items:center;gap:14px;flex-wrap:wrap' },
@@ -241,8 +228,7 @@
       onChange: function (e) { setProp(it.id, 'zone', e.target.value); }
     });
     ZONES.forEach(function (z) {
-      var disabled = isExposed(it) && z.key === 'primaire';
-      var opt = h('option', { value: z.key, disabled: disabled ? '' : null }, z.label + (disabled ? ' (n/a)' : ''));
+      var opt = h('option', { value: z.key }, z.label);
       if (it.zone === z.key) opt.setAttribute('selected', '');
       zoneSel.appendChild(opt);
     });
@@ -258,7 +244,7 @@
     }, typeSel, carac, zoneSel, del);
   }
 
-  // ──────────────────── Compute layout par item (zone secondaire) ────────────────────
+  // ──────────────────── Calcul de layout pour input exposé ────────────────────
   function layoutFor(it) {
     var isChoice = it.type === 'mono' || it.type === 'multi';
     var valeursVertical = isChoice && (it.longLabels || it.n > 10);
@@ -266,24 +252,26 @@
     return { isChoice: isChoice, valeursVertical: valeursVertical, groupeLigne: groupeLigne };
   }
 
-  // ──────────────────── Construction d'un contrôle (zone secondaire ou panneau primaire) ────────────────────
-  function buildControl(it, wrappedAsPanel) {
+  // ──────────────────── Construction d'un contrôle exposé (secondaire ou panneau) ────────────────────
+  function buildControl(it, opts) {
+    opts = opts || {};
     var lay = layoutFor(it);
     var v = S.values[it.id];
+    var idSuffix = (opts.context || 'sec') + '-' + it.id;
 
-    var inner;
     if (it.type === 'text') {
-      inner = [
+      return h('div', null,
         h('label', { style: 'display:block;font:700 16px/24px var(--font-sans);margin-bottom:8px' }, itemLabel(it)),
         h('input', {
-          id: 'ctl-text-' + it.id, type: 'text', value: v.text, placeholder: 'Saisir un terme…',
-          style: 'width:100%;max-width:380px;height:40px;padding:0 12px;border:none;background:var(--grey-975);box-shadow:inset 0 -2px 0 0 var(--grey-625);font:400 16px var(--font-sans);color:var(--text-default-grey)',
+          id: 'ctl-text-' + idSuffix, type: 'text', value: v.text, placeholder: 'Taper un terme…',
+          style: 'width:100%;max-width:' + (opts.fullWidth ? 'none' : '480px') + ';height:40px;padding:0 12px;border:none;background:var(--grey-975);box-shadow:inset 0 -2px 0 0 var(--grey-625);font:400 16px var(--font-sans);color:var(--text-default-grey)',
           onInput: function (e) { setText(it.id, e); }
         })
-      ];
-    } else if (it.type === 'bool') {
+      );
+    }
+    if (it.type === 'bool') {
       var on = v.bool;
-      inner = [h('div', { style: 'display:flex;align-items:center;gap:12px' },
+      return h('div', { style: 'display:flex;align-items:center;gap:12px' },
         h('span', { style: 'font:400 16px/24px var(--font-sans)' }, itemLabel(it)),
         h('button', {
           role: 'switch', 'aria-checked': String(on),
@@ -297,16 +285,18 @@
               ? 'position:absolute;top:3px;left:19px;width:18px;height:18px;border-radius:50%;background:#fff'
               : 'position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--background-action-high-blue-france)'
           })
-        )
-      )];
-    } else if (it.type === 'date') {
-      inner = [
+        ),
+        h('span', { style: 'font:400 13px/20px var(--font-sans);color:var(--text-mention-grey)' }, on ? 'Activé' : 'Désactivé')
+      );
+    }
+    if (it.type === 'date') {
+      return h('div', null,
         h('p', { style: 'margin:0 0 8px;font:700 16px/24px var(--font-sans)' }, itemLabel(it)),
         h('div', { style: 'display:flex;gap:14px;max-width:380px' },
           h('div', { style: 'flex:1' },
             h('label', { style: 'display:block;font:500 13px/20px var(--font-sans);margin-bottom:4px' }, 'Du'),
             h('input', {
-              id: 'ctl-date-from-' + it.id, type: 'date', value: v.date.from,
+              id: 'ctl-date-from-' + idSuffix, type: 'date', value: v.date.from,
               style: 'width:100%;height:40px;padding:0 10px;border:none;background:var(--grey-975);box-shadow:inset 0 -2px 0 0 var(--grey-625);font:400 14px var(--font-sans)',
               onInput: function (e) { setDate(it.id, 'from', e); }
             })
@@ -314,52 +304,45 @@
           h('div', { style: 'flex:1' },
             h('label', { style: 'display:block;font:500 13px/20px var(--font-sans);margin-bottom:4px' }, 'Au'),
             h('input', {
-              id: 'ctl-date-to-' + it.id, type: 'date', value: v.date.to,
+              id: 'ctl-date-to-' + idSuffix, type: 'date', value: v.date.to,
               style: 'width:100%;height:40px;padding:0 10px;border:none;background:var(--grey-975);box-shadow:inset 0 -2px 0 0 var(--grey-625);font:400 14px var(--font-sans)',
               onInput: function (e) { setDate(it.id, 'to', e); }
             })
           )
         )
-      ];
-    } else {
-      var isRadio = it.type === 'mono';
-      var groupWrapStyle = lay.groupeLigne ? 'display:flex;align-items:baseline;gap:20px;flex-wrap:wrap' : 'display:block';
-      var groupLabelStyle = lay.groupeLigne ? 'font:700 16px/24px var(--font-sans);flex:none' : 'display:block;font:700 16px/24px var(--font-sans);margin-bottom:12px';
-      var valuesContainerStyle = lay.valeursVertical
-        ? 'display:flex;flex-direction:column;gap:14px;max-width:480px'
-        : 'display:flex;flex-wrap:wrap;gap:12px 22px;max-width:520px';
-      var boxBase = 'width:20px;height:20px;flex:none;display:inline-flex;align-items:center;justify-content:center;';
-      var values = h('div', { style: valuesContainerStyle });
-      options(it).forEach(function (lab, i) {
-        var checked = isRadio ? (v.mono === i) : (v.multi.indexOf(i) >= 0);
-        var boxStyle, showIcon = false, iconClass = '', iconStyle = '';
-        if (isRadio) {
-          boxStyle = boxBase + 'border-radius:50%;border:2px solid var(--border-action-high-blue-france);background:#fff;';
-          if (checked) { showIcon = true; iconClass = 'ri-circle-fill'; iconStyle = 'font-size:11px;color:var(--background-action-high-blue-france)'; }
-        } else {
-          if (checked) { boxStyle = boxBase + 'background:var(--background-action-high-blue-france);'; showIcon = true; iconClass = 'ri-check-line'; iconStyle = 'color:#fff;font-size:14px'; }
-          else boxStyle = boxBase + 'border:2px solid var(--border-action-high-blue-france);background:#fff;';
-        }
-        var itemStyle = 'display:inline-flex;align-items:' + (lay.valeursVertical && it.longLabels ? 'flex-start' : 'center') + ';gap:8px;font:400 16px/' + (it.longLabels ? '22' : '24') + 'px var(--font-sans);background:none;border:none;padding:0;cursor:pointer;text-align:left;color:var(--text-default-grey)';
-        var box = h('span', { style: boxStyle });
-        if (showIcon) box.appendChild(icon(iconClass, iconStyle));
-        values.appendChild(h('button', {
-          style: itemStyle,
-          onClick: isRadio ? function () { setMono(it.id, i); } : function () { toggleMulti(it.id, i); }
-        }, box, h('span', null, lab)));
-      });
-      inner = [h('div', { style: groupWrapStyle },
-        h('span', { style: groupLabelStyle }, itemLabel(it)),
-        values
-      )];
+      );
     }
-
-    if (wrappedAsPanel) {
-      return h('div', {
-        style: 'margin:12px 0 22px;border:1px solid var(--border-default-grey);background:#fff;box-shadow:var(--raised-shadow);padding:22px;max-width:580px'
-      }, inner);
-    }
-    return h('div', null, inner);
+    // mono / multi
+    var isRadio = it.type === 'mono';
+    var groupWrapStyle = (opts.forcePanel || !lay.groupeLigne) ? 'display:block' : 'display:flex;align-items:baseline;gap:20px;flex-wrap:wrap';
+    var groupLabelStyle = (opts.forcePanel || !lay.groupeLigne) ? 'display:block;font:700 16px/24px var(--font-sans);margin-bottom:12px' : 'font:700 16px/24px var(--font-sans);flex:none';
+    var valuesContainerStyle = (opts.forcePanel || lay.valeursVertical)
+      ? 'display:flex;flex-direction:column;gap:14px;max-width:480px'
+      : 'display:flex;flex-wrap:wrap;gap:12px 22px;max-width:520px';
+    var boxBase = 'width:20px;height:20px;flex:none;display:inline-flex;align-items:center;justify-content:center;';
+    var values = h('div', { style: valuesContainerStyle });
+    options(it).forEach(function (lab, i) {
+      var checked = isRadio ? (v.mono === i) : (v.multi.indexOf(i) >= 0);
+      var boxStyle, showIcon = false, iconClass = '', iconStyle = '';
+      if (isRadio) {
+        boxStyle = boxBase + 'border-radius:50%;border:2px solid var(--border-action-high-blue-france);background:#fff;';
+        if (checked) { showIcon = true; iconClass = 'ri-circle-fill'; iconStyle = 'font-size:11px;color:var(--background-action-high-blue-france)'; }
+      } else {
+        if (checked) { boxStyle = boxBase + 'background:var(--background-action-high-blue-france);'; showIcon = true; iconClass = 'ri-check-line'; iconStyle = 'color:#fff;font-size:14px'; }
+        else boxStyle = boxBase + 'border:2px solid var(--border-action-high-blue-france);background:#fff;';
+      }
+      var itemStyle = 'display:inline-flex;align-items:' + ((opts.forcePanel || lay.valeursVertical) && it.longLabels ? 'flex-start' : 'center') + ';gap:8px;font:400 16px/' + (it.longLabels ? '22' : '24') + 'px var(--font-sans);background:none;border:none;padding:0;cursor:pointer;text-align:left;color:var(--text-default-grey)';
+      var box = h('span', { style: boxStyle });
+      if (showIcon) box.appendChild(icon(iconClass, iconStyle));
+      values.appendChild(h('button', {
+        style: itemStyle,
+        onClick: isRadio ? function () { setMono(it.id, i); } : function () { toggleMulti(it.id, i); }
+      }, box, h('span', null, lab)));
+    });
+    return h('div', { style: groupWrapStyle },
+      h('span', { style: groupLabelStyle }, itemLabel(it)),
+      values
+    );
   }
 
   // ──────────────────── Bouton primaire ────────────────────
@@ -374,10 +357,16 @@
     } else if (it.type === 'date') {
       var td = fmtDate(v.date);
       if (td) lab = itemLabel(it) + ' — ' + td;
+    } else if (it.type === 'text') {
+      if (v.text) lab = itemLabel(it) + ' : « ' + v.text + ' »';
+    } else if (it.type === 'bool') {
+      if (v.bool) badge = '✓';
     }
     var renseigne = (it.type === 'multi' && v.multi.length) ||
                     (it.type === 'mono' && v.mono != null) ||
-                    (it.type === 'date' && fmtDate(v.date));
+                    (it.type === 'date' && fmtDate(v.date)) ||
+                    (it.type === 'text' && v.text) ||
+                    (it.type === 'bool' && v.bool);
     var isOpen = S.openPanelId === it.id;
     var style = (renseigne || isOpen)
       ? 'display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;background:var(--background-action-low-blue-france);border:1px solid var(--border-action-high-blue-france);color:var(--text-action-high-blue-france);font:500 16px/24px var(--font-sans);cursor:pointer'
@@ -387,9 +376,9 @@
     if (badge !== '' && badge !== 0) {
       kids.push(h('span', { style: 'display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border-radius:var(--radius-full);background:var(--background-action-high-blue-france);color:#fff;font:700 12px/1 var(--font-sans)' }, String(badge)));
     }
-    kids.push(icon(isOpen ? 'ri-arrow-down-s-line' : 'ri-arrow-right-s-line', 'font-size:18px'));
+    kids.push(icon('ri-arrow-right-s-line', 'font-size:18px'));
 
-    return h('button', { style: style, onClick: function () { togglePanel(it.id); } }, kids);
+    return h('button', { style: style, onClick: function () { openPanel(it.id); } }, kids);
   }
 
   // ──────────────────── Tags tertiaires ────────────────────
@@ -407,25 +396,52 @@
     var wrapStyle = 'display:flex;flex-wrap:wrap;align-items:baseline;gap:8px';
     var labelStyle = tertiaireBloc ? 'font:700 15px/20px var(--font-sans);flex-basis:100%' : 'font:700 15px/20px var(--font-sans);flex:none';
 
+    if (tags.length === 0) return null;
     var wrap = h('div', { style: wrapStyle });
     if (showLabel) wrap.appendChild(h('span', { style: labelStyle }, itemLabel(it) + ' :'));
-    if (tags.length === 0) {
-      wrap.appendChild(h('span', { style: 'font:400 14px/20px var(--font-sans);color:var(--text-mention-grey)' }, '— aucune valeur sélectionnée'));
-    } else {
-      tags.forEach(function (t) {
-        wrap.appendChild(h('span', {
-          style: 'display:inline-flex;align-items:flex-start;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:18px;font:500 14px/20px var(--font-sans);max-width:100%'
-        },
-          h('span', null, t.text),
-          h('button', {
-            'aria-label': 'Retirer',
-            style: 'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:50%;background:transparent;color:inherit;cursor:pointer;flex:none',
-            onClick: t.onRemove
-          }, icon('ri-close-line', 'font-size:15px'))
-        ));
-      });
-    }
+    tags.forEach(function (t) {
+      wrap.appendChild(h('span', {
+        style: 'display:inline-flex;align-items:flex-start;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:18px;font:500 14px/20px var(--font-sans);max-width:100%'
+      },
+        h('span', null, t.text),
+        h('button', {
+          'aria-label': 'Retirer',
+          style: 'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:50%;background:transparent;color:inherit;cursor:pointer;flex:none',
+          onClick: t.onRemove
+        }, icon('ri-close-line', 'font-size:15px'))
+      ));
+    });
     return wrap;
+  }
+
+  // ──────────────────── Panneau latéral ────────────────────
+  function buildSidePanel(it) {
+    var host = h('div');
+    host.appendChild(h('div', { id: 'side-panel-backdrop', onClick: closePanel }));
+    var panel = h('aside', { id: 'side-panel' },
+      h('div', { style: 'padding:14px 22px;display:flex;justify-content:flex-end' },
+        h('button', {
+          style: 'display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--text-action-high-blue-france);font:500 14px/1 var(--font-sans);cursor:pointer;padding:6px',
+          onClick: closePanel
+        }, 'Fermer', icon('ri-close-line', 'font-size:18px'))
+      ),
+      h('div', { style: 'padding:0 28px 16px;display:flex;align-items:center;gap:10px' },
+        icon('ri-arrow-right-line', 'font-size:22px;color:var(--text-title-grey)'),
+        h('h3', { style: 'margin:0;font:700 22px/30px var(--font-sans);color:var(--text-title-grey)' }, itemLabel(it))
+      ),
+      h('div', { style: 'border-top:1px solid var(--grey-900);margin:0 28px' }),
+      h('div', { style: 'flex:1;overflow-y:auto;padding:22px 28px' },
+        buildControl(it, { context: 'panel', forcePanel: true, fullWidth: true })
+      ),
+      h('div', { style: 'padding:18px 28px;border-top:1px solid var(--grey-900);display:flex;justify-content:stretch' },
+        h('button', {
+          style: 'flex:1;height:44px;padding:0 22px;background:var(--background-action-high-blue-france);border:none;color:#fff;font:500 16px/1 var(--font-sans);cursor:pointer',
+          onClick: closePanel
+        }, 'Voir les résultats')
+      )
+    );
+    host.appendChild(panel);
+    return host;
   }
 
   // ──────────────────── Rendu ────────────────────
@@ -434,54 +450,68 @@
   }
 
   function render() {
-    // setup
+    // disclose : table
     var rowsEl = document.getElementById('rows');
     rowsEl.textContent = '';
-    S.items.forEach(function (it, idx) { rowsEl.appendChild(buildRow(it, idx)); });
+    S.items.forEach(function (it) { rowsEl.appendChild(buildRow(it)); });
     document.getElementById('items-count').textContent = S.items.length + ' filtre' + (S.items.length > 1 ? 's' : '');
 
-    // mémoriser focus / caret pour les champs texte/date
+    // mémoriser focus pour les champs éditables
     var act = document.activeElement;
     var focusId = (act && act.id) ? act.id : null;
     var caret = (focusId && /^ctl-text-/.test(focusId) && act.selectionStart != null) ? [act.selectionStart, act.selectionEnd] : null;
 
-    // zone primaire
-    var primaireEl = document.getElementById('zone-primaire');
-    var panelEl = document.getElementById('zone-primaire-panel');
-    primaireEl.textContent = '';
-    panelEl.textContent = '';
-    var primaireItems = S.items.filter(function (it) { return it.zone === 'primaire' && !isExposed(it); });
-    if (primaireItems.length === 0) {
-      primaireEl.appendChild(emptyMsg('Aucun filtre placé ici. Ajoute une ligne et choisis la zone Primaire.'));
+    // preview body : sections dans l'ordre maquette
+    // 1) inputs texte exposés (rares mais en tête car barre de recherche)
+    // 2) boutons primaires (alignés en row)
+    // 3) autres secondaires (date, bool, mono, multi exposés)
+    // 4) tags tertiaires
+    var body = document.getElementById('preview-body');
+    body.textContent = '';
+
+    var secTexts   = S.items.filter(function (it) { return it.zone === 'secondaire' && it.type === 'text'; });
+    var primItems  = S.items.filter(function (it) { return it.zone === 'primaire'; });
+    var secOthers  = S.items.filter(function (it) { return it.zone === 'secondaire' && it.type !== 'text'; });
+    var tertItems  = S.items.filter(function (it) { return it.zone === 'tertiaire'; });
+    var totalShown = secTexts.length + primItems.length + secOthers.length + tertItems.length;
+
+    if (totalShown === 0) {
+      body.appendChild(emptyMsg('Aucun filtre configuré. Ouvre les réglages pour en ajouter.'));
     } else {
-      var row = h('div', { style: 'display:flex;flex-wrap:wrap;gap:10px' });
-      primaireItems.forEach(function (it) { row.appendChild(buildPrimaryButton(it)); });
-      primaireEl.appendChild(row);
-      // panneau ouvert
-      if (S.openPanelId != null) {
-        var openIt = primaireItems.find(function (it) { return it.id === S.openPanelId; });
-        if (openIt) panelEl.appendChild(buildControl(openIt, true));
+      secTexts.forEach(function (it) {
+        body.appendChild(buildControl(it, { context: 'sec', fullWidth: true }));
+      });
+      if (primItems.length > 0) {
+        var row = h('div', { style: 'display:flex;flex-wrap:wrap;gap:10px' });
+        primItems.forEach(function (it) { row.appendChild(buildPrimaryButton(it)); });
+        body.appendChild(row);
+      }
+      // secondaires non-texte : bool/date courts → flex inline ; choix → bloc
+      var inlineSec = secOthers.filter(function (it) { return it.type === 'bool'; });
+      var blockSec  = secOthers.filter(function (it) { return it.type !== 'bool'; });
+      if (inlineSec.length > 0) {
+        var inlineWrap = h('div', { style: 'display:flex;flex-wrap:wrap;gap:14px 32px;align-items:center' });
+        inlineSec.forEach(function (it) { inlineWrap.appendChild(buildControl(it, { context: 'sec' })); });
+        body.appendChild(inlineWrap);
+      }
+      blockSec.forEach(function (it) { body.appendChild(buildControl(it, { context: 'sec' })); });
+      // tertiaires : empilés
+      var tertNodes = tertItems.map(buildTertiary).filter(function (n) { return n != null; });
+      if (tertNodes.length > 0) {
+        var tertWrap = h('div', { style: 'display:flex;flex-direction:column;gap:14px;padding-top:6px;border-top:1px solid var(--grey-900)' });
+        tertNodes.forEach(function (n) { tertWrap.appendChild(n); });
+        body.appendChild(tertWrap);
       }
     }
 
-    // zone secondaire
-    var secEl = document.getElementById('zone-secondaire');
-    secEl.textContent = '';
-    var secItems = S.items.filter(function (it) { return it.zone === 'secondaire'; });
-    if (secItems.length === 0) {
-      secEl.appendChild(emptyMsg('Aucun filtre placé ici. Ajoute une ligne et choisis la zone Secondaire.'));
-    } else {
-      secItems.forEach(function (it) { secEl.appendChild(buildControl(it, false)); });
-    }
-
-    // zone tertiaire
-    var tertEl = document.getElementById('zone-tertiaire');
-    tertEl.textContent = '';
-    var tertItems = S.items.filter(function (it) { return it.zone === 'tertiaire'; });
-    if (tertItems.length === 0) {
-      tertEl.appendChild(emptyMsg('Aucun filtre placé ici. Ajoute une ligne et choisis la zone Tertiaire.'));
-    } else {
-      tertItems.forEach(function (it) { tertEl.appendChild(buildTertiary(it)); });
+    // panneau latéral
+    var host = document.getElementById('side-panel-host');
+    host.textContent = '';
+    if (S.openPanelId != null) {
+      var openIt = S.items.find(function (it) { return it.id === S.openPanelId; });
+      if (openIt && openIt.zone === 'primaire') {
+        host.appendChild(buildSidePanel(openIt));
+      }
     }
 
     // restaurer focus
@@ -496,19 +526,20 @@
 
   // ──────────────────── Bootstrap ────────────────────
   document.getElementById('add-row').addEventListener('click', addRow);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && S.openPanelId != null) closePanel(); });
 
-  // jeu d'exemple par défaut
+  // jeu d'exemple par défaut (proche du Test_refonte_Vue_portail)
   var seed = [
+    { type: 'text',  n: 0, longLabels: false, zone: 'secondaire' },
     { type: 'multi', n: 7, longLabels: false, zone: 'primaire' },
-    { type: 'mono',  n: 3, longLabels: false, zone: 'primaire' },
-    { type: 'date',  n: 5, longLabels: false, zone: 'primaire' },
-    { type: 'text',  n: 5, longLabels: false, zone: 'secondaire' },
-    { type: 'bool',  n: 5, longLabels: false, zone: 'secondaire' },
-    { type: 'multi', n: 12, longLabels: true,  zone: 'secondaire' }
+    { type: 'mono',  n: 4, longLabels: false, zone: 'primaire' },
+    { type: 'multi', n: 5, longLabels: false, zone: 'primaire' },
+    { type: 'date',  n: 0, longLabels: false, zone: 'primaire' },
+    { type: 'bool',  n: 0, longLabels: false, zone: 'secondaire' }
   ];
   seed.forEach(function (cfg) {
     var id = S.nextId++;
-    S.items.push({ id: id, type: cfg.type, n: cfg.n, longLabels: cfg.longLabels, zone: cfg.zone });
+    S.items.push({ id: id, type: cfg.type, n: cfg.n || 5, longLabels: cfg.longLabels, zone: cfg.zone });
     S.values[id] = defaultValues();
   });
 
