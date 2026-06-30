@@ -11,17 +11,35 @@ C'est un **document de specs vivant** : il montre comment chaque type de filtre
 et **explicite la règle de mise en page appliquée** pour que l'intégration Drupal soit
 sans ambiguïté.
 
+## Deux rendus, un même bac à sable
+
+Le même prototype existe en deux versions, **pilotées par le même disclose de paramétrage**
+et reliées par un **bouton de bascule en haut à droite** :
+
+| Page | Rendu de la zone « Affiner votre recherche » |
+|------|----------------------------------------------|
+| `index.html` | **Prototype** — HTML/CSS/JS natif stylé « à la main » sur les jetons DSFR. |
+| `index-dsfr.html` | **100 % DSFR natif** — uniquement des composants officiels (`fr-input`, `fr-checkbox-group`, `fr-radio-group`, `fr-toggle`, `fr-modal`, `fr-tag`, `fr-btn`…) et des classes utilitaires. |
+
+`index-dsfr.html` sert de **preuve de conformité** : il vérifie que le rendu prototypé est
+bien reproductible avec le DSFR officiel. Seul le **disclose de paramétrage** y reste hors
+DSFR (volontairement). Les filtres *primaires* y ouvrent une **modale DSFR** (`fr-modal`) au
+lieu du panneau latéral du prototype, le DSFR n'ayant pas de composant « panneau ».
+
 ## Lancer
 
-Aucune dépendance, aucun build. Ouvrir `index.html` dans un navigateur, ou servir le dossier :
+Aucune dépendance, aucun build. Ouvrir `index.html` (ou `index-dsfr.html`) dans un
+navigateur, ou servir le dossier :
 
 ```bash
 python3 -m http.server 8000
-# puis http://localhost:8000/
+# puis http://localhost:8000/        (prototype)
+#   ou http://localhost:8000/index-dsfr.html   (100 % DSFR)
 ```
 
-Les icônes ([Remix Icon](https://remixicon.com/)) sont chargées depuis un CDN ; les polices
-Marianne et les jetons de couleur DSFR sont embarqués dans `assets/`.
+Tout est **embarqué dans `assets/`** : police Marianne, jetons de couleur DSFR, et le DSFR
+officiel vendoré (`assets/dsfr/`, v1.14.4 — CSS, JS, icônes). Le prototype `index.html`
+charge en plus les icônes [Remix Icon](https://remixicon.com/) depuis un CDN.
 
 ## Comment ça marche
 
@@ -96,9 +114,11 @@ jetons DSFR (`assets/colors_and_type.css`).
 ## Structure
 
 ```
-index.html                  Le bac à sable (auto-suffisant)
+index.html                  Bac à sable — rendu prototype (custom)
+index-dsfr.html             Bac à sable — rendu 100 % DSFR natif
 assets/colors_and_type.css  Jetons DSFR (couleurs, type) + @font-face Marianne
 assets/fonts/               Police Marianne (woff/woff2, tous les poids)
+assets/dsfr/                DSFR officiel vendoré v1.14.4 (CSS, JS, icônes, polices)
 ```
 
 ---
