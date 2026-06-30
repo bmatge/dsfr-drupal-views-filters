@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="fr" data-fr-scheme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Filtres exposés — rendu 100 % DSFR natif</title>
+
+<!-- Jetons de couleur + police Marianne (servent au disclose de paramétrage, conservé custom) -->
+<link rel="stylesheet" href="assets/colors_and_type.css">
+<!-- DSFR officiel (vendored, v1.14.4) -->
+<link rel="stylesheet" href="assets/dsfr/dsfr.min.css">
+<link rel="stylesheet" href="assets/dsfr/utility/icons/icons.min.css">
+
+<style>
+  /* ─────────────────────────────────────────────────────────────
+     Styles HORS DSFR, volontairement limités à :
+       1. le disclose de paramétrage (explicitement autorisé custom)
+       2. le bouton de bascule entre les deux pages
+     Le bloc « Affiner votre recherche » n'utilise QUE des composants
+     et classes utilitaires DSFR natifs.
+     ───────────────────────────────────────────────────────────── */
+  #setup-disclose summary::-webkit-details-marker{display:none}
+  #setup-disclose[open] #disclose-chevron{transform:rotate(180deg)}
+  #setup-disclose select,#setup-disclose input{font-family:var(--font-sans)}
+
+  /* Bascule entre les deux pages, en haut à droite sur les deux pages */
+  .page-switch{position:fixed;top:16px;right:16px;z-index:1000}
+</style>
+</head>
+<body>
+
+<!-- ===== BASCULE PROTOTYPE ⇄ DSFR (top-right) ===== -->
+<a class="fr-btn fr-btn--secondary fr-btn--sm fr-icon-arrow-left-line fr-btn--icon-left page-switch" href="index.html">
+  Version prototype
+</a>
+
+<div class="fr-container fr-py-6w" style="max-width:1100px">
+
+  <!-- ===== DISCLOSE : LISTE DES FILTRES À SIMULER (custom, autorisé) ===== -->
+  <details id="setup-disclose" open style="background:var(--grey-100);color:#fff;margin-bottom:36px">
+    <summary style="list-style:none;cursor:pointer;padding:18px 26px;display:flex;align-items:center;justify-content:space-between;gap:16px;user-select:none">
+      <span style="display:flex;align-items:center;gap:10px;font:700 13px/18px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--blue-france-moon-625)"><i class="fr-icon-settings-5-line" aria-hidden="true"></i>Liste des filtres à simuler</span>
+      <span style="display:flex;align-items:center;gap:14px">
+        <span id="items-count" style="font:400 12px/18px var(--font-sans);color:var(--grey-800)"></span>
+        <i class="fr-icon-arrow-down-s-line" id="disclose-chevron" aria-hidden="true" style="transition:transform .15s;color:var(--grey-800)"></i>
+      </span>
+    </summary>
+    <div style="padding:0 26px 24px">
+      <div style="display:grid;grid-template-columns:140px 1fr 130px 130px 36px;gap:14px;padding:0 0 8px;border-bottom:1px solid var(--grey-200);font:500 11px/16px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--grey-800)">
+        <span>Type</span>
+        <span>Caractéristiques</span>
+        <span>Zone</span>
+        <span>Récap tertiaire</span>
+        <span></span>
+      </div>
+      <div id="rows" style="display:flex;flex-direction:column"></div>
+      <button id="add-row" type="button" style="margin-top:16px;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;background:transparent;border:1px dashed var(--grey-625);color:#fff;font:500 14px/1 var(--font-sans);cursor:pointer">
+        <i class="fr-icon-add-line" aria-hidden="true"></i>Ajouter une ligne
+      </button>
+    </div>
+  </details>
+
+  <!-- ===== EN-TÊTE (typographie DSFR native) ===== -->
+  <p class="fr-text--sm fr-text--bold fr-mb-1v" style="text-transform:uppercase;letter-spacing:.06em;color:var(--text-action-high-blue-france)">Rendu 100 % DSFR natif</p>
+  <h1>Titre 1</h1>
+  <p class="fr-text--lead fr-mb-6w" style="max-width:780px">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque porta lorem eget elit accumsan dignissim. Nunc urna nisi, porttitor sit amet pharetra vel, egestas sit amet enim. In quam quam, rhoncus vel velit quis, malesuada gravida nulla.</p>
+
+  <!-- ===== « Affiner votre recherche » — composants DSFR natifs ===== -->
+  <form id="filters-form" class="fr-p-4w" style="background:var(--background-default-grey);border:1px solid var(--border-default-grey)" onsubmit="return false">
+    <h2 class="fr-mb-3w">Affiner votre recherche</h2>
+    <div id="preview-body"></div>
+    <div class="fr-mt-4w" style="display:flex;justify-content:flex-end">
+      <button type="submit" class="fr-btn fr-icon-search-line fr-btn--icon-left">Rechercher</button>
+    </div>
+  </form>
+
+  <p class="fr-text--sm fr-mt-3w" style="color:var(--text-mention-grey)">
+    Cette page reproduit le prototype avec <strong>uniquement des composants DSFR natifs</strong>
+    (champs, cases à cocher, boutons radio, interrupteurs, modales, tags) et des classes utilitaires.
+    Seul le <strong>disclose de paramétrage</strong> ci-dessus reste hors DSFR.
+  </p>
+
+</div>
+
+<!-- ===== HÔTE DES MODALES PRIMAIRES (persistant) ===== -->
+<div id="modals-host"></div>
+
+<script type="module" src="assets/dsfr/dsfr.module.min.js"></script>
+<script nomodule src="assets/dsfr/dsfr.nomodule.min.js"></script>
+
+<script>
+"use strict";
+(function () {
+  // ───────────────────────── État ─────────────────────────
+  var S = {
+    nextId: 1,
+    items: [],          // [{id, type, n, longLabels, zone, tertiary}]
+    values: {},         // {[id]: {multi, mono, bool, text, date}}
+    builtSignature: ''  // empreinte du jeu de filtres (déclenche la reconstruction des modales)
+  };
+
+  var TYPES = [
+    { key: 'multi', label: 'Multivalué' },
+    { key: 'mono',  label: 'Monovalué' },
+    { key: 'date',  label: 'Date' },
+    { key: 'text',  label: 'Texte' },
+    { key: 'bool',  label: 'Booléen' }
+  ];
+  var ZONES = [
+    { key: 'primaire',   label: 'Primaire' },
+    { key: 'secondaire', label: 'Secondaire' }
+  ];
+
+  // ──────────────────── Helper DOM ────────────────────
+  function h(tag, props) {
+    var el = document.createElement(tag);
+    if (props) {
+      for (var k in props) {
+        var v = props[k];
+        if (v == null) continue;
+        if (k === 'style') el.setAttribute('style', v);
+        else if (k === 'html') el.innerHTML = v;
+        else if (k.slice(0, 2) === 'on' && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
+        else el.setAttribute(k, v);
+      }
+    }
+    for (var i = 2; i < arguments.length; i++) {
+      var c = arguments[i];
+      if (c == null || c === false) continue;
+      if (Array.isArray(c)) c.forEach(function (n) { if (n != null && n !== false) el.appendChild(typeof n === 'string' ? document.createTextNode(n) : n); });
+      else el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    }
+    return el;
+  }
+
+  // ──────────────────── Données dérivées ────────────────────
+  function defaultValues() {
+    return { multi: [], mono: null, bool: false, text: '', date: { from: '', to: '' } };
+  }
+  function label(it, i) {
+    var num = String(i + 1).padStart(2, '0');
+    return it.longLabels ? ('Option dont le libellé est une phrase descriptive ' + num) : ('Valeur ' + num);
+  }
+  function options(it) { return Array.from({ length: it.n }, function (_, i) { return label(it, i); }); }
+  function itemLabel(it) {
+    if (it.type === 'text') return 'Texte';
+    if (it.type === 'bool') return 'Booléen';
+    if (it.type === 'date') return 'Date';
+    return (it.type === 'mono' ? 'Mono' : 'Multi') + ' · ' + it.n + ' valeur' + (it.n > 1 ? 's' : '') + (it.longLabels ? ' (longs)' : '');
+  }
+  function fmtDate(d) {
+    var f = function (x) { if (!x) return ''; var p = x.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; };
+    if (d.from && d.to) return 'du ' + f(d.from) + ' au ' + f(d.to);
+    if (d.from) return 'depuis le ' + f(d.from);
+    if (d.to) return "jusqu'au " + f(d.to);
+    return '';
+  }
+  function signature() {
+    return S.items.map(function (it) {
+      return [it.id, it.type, it.n, it.longLabels ? 1 : 0, it.zone, it.tertiary ? 1 : 0].join(':');
+    }).join('|');
+  }
+
+  // ──────────────────── Actions ────────────────────
+  function addRow() {
+    var id = S.nextId++;
+    S.items.push({ id: id, type: 'multi', n: 5, longLabels: false, zone: 'primaire', tertiary: false });
+    S.values[id] = defaultValues();
+    render();
+  }
+  function removeRow(id) {
+    S.items = S.items.filter(function (it) { return it.id !== id; });
+    delete S.values[id];
+    render();
+  }
+  function setProp(id, prop, value) {
+    var it = S.items.find(function (i) { return i.id === id; });
+    if (!it) return;
+    if (prop === 'type') {
+      S.values[id] = defaultValues();
+      if ((value === 'multi' || value === 'mono') && !it.n) it.n = 5;
+    }
+    if (prop === 'n') {
+      value = Math.max(2, Math.min(14, parseInt(value, 10) || 2));
+      var v = S.values[id];
+      v.multi = v.multi.filter(function (k) { return k < value; });
+      if (v.mono != null && v.mono >= value) v.mono = null;
+    }
+    it[prop] = value;
+    render();
+  }
+  function toggleMulti(id, i) {
+    var v = S.values[id]; var a = v.multi.slice(); var k = a.indexOf(i);
+    if (k >= 0) a.splice(k, 1); else a.push(i);
+    v.multi = a; renderPreview();
+  }
+  function setMono(id, i) { var v = S.values[id]; v.mono = (v.mono === i) ? null : i; renderPreview(); }
+  function toggleBool(id) { S.values[id].bool = !S.values[id].bool; renderPreview(); }
+  function setText(id, val) { S.values[id].text = val; renderPreview(); }
+  function setDate(id, field, val) { S.values[id].date = Object.assign({}, S.values[id].date); S.values[id].date[field] = val; renderPreview(); }
+
+  // ──────────────────── Disclose : ligne de paramétrage (custom, autorisé) ────────────────────
+  function selectStyle() {
+    return 'height:34px;padding:0 28px 0 10px;border:1px solid var(--grey-625);background:var(--grey-100) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cpath fill=%27%23fff%27 d=%27M7 10l5 5 5-5z%27/%3E%3C/svg%3E") right 4px center/18px no-repeat;color:#fff;font:500 14px/1 var(--font-sans);cursor:pointer;-webkit-appearance:none;-moz-appearance:none;appearance:none';
+  }
+  function buildRow(it) {
+    var typeSel = h('select', {
+      style: selectStyle() + ';width:100%',
+      onChange: function (e) { setProp(it.id, 'type', e.target.value); }
+    });
+    TYPES.forEach(function (t) {
+      var opt = h('option', { value: t.key }, t.label);
+      if (it.type === t.key) opt.setAttribute('selected', '');
+      typeSel.appendChild(opt);
+    });
+
+    var carac;
+    if (it.type === 'multi' || it.type === 'mono') {
+      carac = h('div', { style: 'display:flex;align-items:center;gap:14px;flex-wrap:wrap' },
+        h('div', { style: 'display:inline-flex;align-items:center;gap:8px' },
+          h('span', { style: 'font:400 13px/1 var(--font-sans);color:var(--grey-800)' }, 'Options'),
+          h('input', {
+            type: 'number', min: '2', max: '14', value: String(it.n),
+            style: 'width:64px;height:32px;padding:0 8px;border:1px solid var(--grey-625);background:var(--grey-100);color:#fff;font:500 14px/1 var(--font-sans)',
+            onInput: function (e) { setProp(it.id, 'n', e.target.value); }
+          })
+        ),
+        h('label', { style: 'display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--grey-800);font:400 13px/1 var(--font-sans)' },
+          h('input', {
+            type: 'checkbox',
+            style: 'accent-color:var(--blue-france-sun-113);width:16px;height:16px;margin:0',
+            checked: it.longLabels ? '' : null,
+            onChange: function (e) { setProp(it.id, 'longLabels', e.target.checked); }
+          }),
+          'Libellés longs'
+        )
+      );
+    } else {
+      carac = h('span', { style: 'color:var(--grey-800);font:400 13px/1 var(--font-sans)' }, '—');
+    }
+
+    var zoneSel = h('select', {
+      style: selectStyle() + ';width:100%',
+      onChange: function (e) { setProp(it.id, 'zone', e.target.value); }
+    });
+    ZONES.forEach(function (z) {
+      var opt = h('option', { value: z.key }, z.label);
+      if (it.zone === z.key) opt.setAttribute('selected', '');
+      zoneSel.appendChild(opt);
+    });
+
+    var tertCell = h('label', {
+      style: 'display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:#fff;font:400 13px/1 var(--font-sans)'
+    },
+      h('input', {
+        type: 'checkbox',
+        style: 'accent-color:var(--blue-france-sun-113);width:16px;height:16px;margin:0',
+        checked: it.tertiary ? '' : null,
+        onChange: function (e) { setProp(it.id, 'tertiary', e.target.checked); }
+      }),
+      h('span', { style: 'color:var(--grey-800)' }, 'Restituer')
+    );
+
+    var del = h('button', {
+      type: 'button', title: 'Supprimer cette ligne', 'aria-label': 'Supprimer cette ligne',
+      style: 'width:32px;height:32px;border:none;background:transparent;color:var(--grey-800);cursor:pointer;display:inline-flex;align-items:center;justify-content:center',
+      onClick: function () { removeRow(it.id); }
+    }, h('i', { 'class': 'fr-icon-close-line', 'aria-hidden': 'true' }));
+
+    return h('div', {
+      style: 'display:grid;grid-template-columns:140px 1fr 130px 130px 36px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--grey-200)'
+    }, typeSel, carac, zoneSel, tertCell, del);
+  }
+
+  // ──────────────────── Layout des valeurs exposées ────────────────────
+  function valeursVertical(it) {
+    var isChoice = it.type === 'mono' || it.type === 'multi';
+    return isChoice && (it.longLabels || it.n > 10);
+  }
+
+  // ──────────────────── Contrôle DSFR natif (secondaire ou modale) ────────────────────
+  function buildControl(it, opts) {
+    opts = opts || {};
+    var v = S.values[it.id];
+    var ctx = opts.context || 'sec';
+    var sfx = ctx + '-' + it.id;
+
+    // TEXTE → fr-input-group
+    if (it.type === 'text') {
+      var tid = 'ctl-text-' + sfx;
+      var group = h('div', { 'class': 'fr-input-group' },
+        h('label', { 'class': 'fr-label', 'for': tid }, itemLabel(it)),
+        h('input', {
+          'class': 'fr-input', id: tid, type: 'text', name: tid, value: v.text, placeholder: 'Taper un terme…',
+          onInput: function (e) { setText(it.id, e.target.value); }
+        })
+      );
+      return group;
+    }
+
+    // BOOLÉEN → fr-toggle
+    if (it.type === 'bool') {
+      var bid = 'ctl-bool-' + sfx;
+      var input = h('input', {
+        'class': 'fr-toggle__input', id: bid, type: 'checkbox', name: bid,
+        checked: v.bool ? '' : null,
+        onChange: function () { toggleBool(it.id); }
+      });
+      return h('div', { 'class': 'fr-toggle fr-toggle--label-left' },
+        input,
+        h('label', {
+          'class': 'fr-toggle__label', 'for': bid,
+          'data-fr-checked-label': 'Activé', 'data-fr-unchecked-label': 'Désactivé'
+        }, itemLabel(it))
+      );
+    }
+
+    // légende : masquée visuellement dans la modale (le titre de la modale fait déjà l'intitulé)
+    var legendClass = 'fr-fieldset__legend' + (opts.forcePanel ? ' fr-sr-only' : '');
+
+    // DATE → fieldset, deux fr-input type=date
+    if (it.type === 'date') {
+      var fid = 'ctl-date-from-' + sfx, toid = 'ctl-date-to-' + sfx;
+      return h('fieldset', { 'class': 'fr-fieldset', 'aria-labelledby': 'lg-' + sfx },
+        h('legend', { 'class': legendClass, id: 'lg-' + sfx }, itemLabel(it)),
+        h('div', { 'class': 'fr-fieldset__element fr-fieldset__element--inline' },
+          h('div', { 'class': 'fr-input-group' },
+            h('label', { 'class': 'fr-label', 'for': fid }, 'Du'),
+            h('input', { 'class': 'fr-input', id: fid, name: fid, type: 'date', value: v.date.from, onInput: function (e) { setDate(it.id, 'from', e.target.value); } })
+          )
+        ),
+        h('div', { 'class': 'fr-fieldset__element fr-fieldset__element--inline' },
+          h('div', { 'class': 'fr-input-group' },
+            h('label', { 'class': 'fr-label', 'for': toid }, 'Au'),
+            h('input', { 'class': 'fr-input', id: toid, name: toid, type: 'date', value: v.date.to, onInput: function (e) { setDate(it.id, 'to', e.target.value); } })
+          )
+        )
+      );
+    }
+
+    // MONO / MULTI → fieldset de cases à cocher / boutons radio
+    var isRadio = it.type === 'mono';
+    var vertical = opts.forcePanel || valeursVertical(it);
+    var fsClass = 'fr-fieldset' + (vertical ? '' : ' fr-fieldset--inline');
+    var fs = h('fieldset', { 'class': fsClass, 'aria-labelledby': 'lg-' + sfx },
+      h('legend', { 'class': legendClass, id: 'lg-' + sfx }, itemLabel(it))
+    );
+    options(it).forEach(function (lab, i) {
+      var inId = 'ctl-' + (isRadio ? 'r' : 'c') + '-' + sfx + '-' + i;
+      var checked = isRadio ? (v.mono === i) : (v.multi.indexOf(i) >= 0);
+      var input = h('input', {
+        type: isRadio ? 'radio' : 'checkbox',
+        id: inId, name: 'grp-' + sfx, value: String(i),
+        checked: checked ? '' : null,
+        onChange: isRadio
+          ? function () { setMono(it.id, i); }
+          : function () { toggleMulti(it.id, i); }
+      });
+      var groupCls = isRadio ? 'fr-radio-group' : 'fr-checkbox-group';
+      var elemCls = 'fr-fieldset__element' + (vertical ? '' : ' fr-fieldset__element--inline');
+      fs.appendChild(
+        h('div', { 'class': elemCls },
+          h('div', { 'class': groupCls },
+            input,
+            h('label', { 'class': 'fr-label', 'for': inId }, lab)
+          )
+        )
+      );
+    });
+    return fs;
+  }
+
+  // ──────────────────── Bouton primaire (ouvre la modale DSFR) ────────────────────
+  function isFilled(it) {
+    var v = S.values[it.id];
+    return (it.type === 'multi' && v.multi.length > 0) ||
+           (it.type === 'mono'  && v.mono != null) ||
+           (it.type === 'date'  && !!fmtDate(v.date)) ||
+           (it.type === 'text'  && !!v.text) ||
+           (it.type === 'bool'  && v.bool);
+  }
+  function primaryLabel(it) {
+    var v = S.values[it.id];
+    if (it.type === 'mono' && v.mono != null) return itemLabel(it) + ' : ' + label(it, v.mono);
+    if (it.type === 'date') { var td = fmtDate(v.date); if (td) return itemLabel(it) + ' — ' + td; }
+    if (it.type === 'text' && v.text) return itemLabel(it) + ' : « ' + v.text + ' »';
+    if (it.type === 'multi' && v.multi.length) return itemLabel(it) + ' (' + v.multi.length + ')';
+    return itemLabel(it);
+  }
+  function buildPrimaryButton(it) {
+    var filled = isFilled(it);
+    var cls = 'fr-btn ' + (filled ? '' : 'fr-btn--secondary ') + 'fr-btn--icon-right fr-icon-arrow-right-s-line';
+    return h('button', {
+      type: 'button', 'class': cls.trim(),
+      'aria-controls': 'modal-' + it.id, 'data-fr-opened': 'false'
+    }, primaryLabel(it));
+  }
+
+  // ──────────────────── Tags tertiaires (fr-tags-group / fr-tag--dismiss) ────────────────────
+  function buildTertiary(it) {
+    var v = S.values[it.id];
+    var tags = [];
+    var showLabel = true;
+    if (it.type === 'text') { if (v.text) tags = [{ text: '« ' + v.text + ' »', onRemove: function () { setText(it.id, ''); } }]; }
+    else if (it.type === 'bool') { showLabel = false; if (v.bool) tags = [{ text: itemLabel(it), onRemove: function () { toggleBool(it.id); } }]; }
+    else if (it.type === 'date') { var t = fmtDate(v.date); if (t) tags = [{ text: t, onRemove: function () { S.values[it.id].date = { from: '', to: '' }; renderPreview(); } }]; }
+    else if (it.type === 'mono') { if (v.mono != null) tags = [{ text: label(it, v.mono), onRemove: function () { setMono(it.id, v.mono); } }]; }
+    else { tags = v.multi.slice().sort(function (a, b) { return a - b; }).map(function (i) { return { text: label(it, i), onRemove: function () { toggleMulti(it.id, i); } }; }); }
+
+    if (tags.length === 0) return null;
+
+    var wrap = h('div', { 'class': 'fr-mb-2w' });
+    if (showLabel) wrap.appendChild(h('p', { 'class': 'fr-text--sm fr-text--bold fr-mb-1v' }, itemLabel(it) + ' :'));
+    var ul = h('ul', { 'class': 'fr-tags-group' });
+    tags.forEach(function (t) {
+      ul.appendChild(h('li', null,
+        h('button', {
+          type: 'button', 'class': 'fr-tag fr-tag--dismiss', 'aria-label': 'Retirer ' + t.text,
+          onClick: t.onRemove
+        }, t.text)
+      ));
+    });
+    wrap.appendChild(ul);
+    return wrap;
+  }
+
+  // ──────────────────── Modales primaires (DSFR, persistantes) ────────────────────
+  function buildModal(it) {
+    var titleId = 'modal-' + it.id + '-title';
+    return h('dialog', { 'class': 'fr-modal', id: 'modal-' + it.id, 'aria-labelledby': titleId, role: 'dialog' },
+      h('div', { 'class': 'fr-container fr-container--fluid fr-container-md' },
+        h('div', { 'class': 'fr-grid-row fr-grid-row--center' },
+          h('div', { 'class': 'fr-col-12 fr-col-md-8 fr-col-lg-6' },
+            h('div', { 'class': 'fr-modal__body' },
+              h('div', { 'class': 'fr-modal__header' },
+                h('button', { type: 'button', 'class': 'fr-btn--close fr-btn', 'aria-controls': 'modal-' + it.id, title: 'Fermer' }, 'Fermer')
+              ),
+              h('div', { 'class': 'fr-modal__content' },
+                h('h1', { id: titleId, 'class': 'fr-modal__title' }, itemLabel(it)),
+                buildControl(it, { context: 'panel', forcePanel: true })
+              ),
+              h('div', { 'class': 'fr-modal__footer' },
+                h('button', { type: 'button', 'class': 'fr-btn', 'aria-controls': 'modal-' + it.id }, 'Voir les résultats')
+              )
+            )
+          )
+        )
+      )
+    );
+  }
+
+  // ──────────────────── Rendus ────────────────────
+  function renderSettings() {
+    var rowsEl = document.getElementById('rows');
+    rowsEl.textContent = '';
+    S.items.forEach(function (it) { rowsEl.appendChild(buildRow(it)); });
+    document.getElementById('items-count').textContent = S.items.length + ' filtre' + (S.items.length > 1 ? 's' : '');
+  }
+
+  function renderModals() {
+    var host = document.getElementById('modals-host');
+    host.textContent = '';
+    S.items.filter(function (it) { return it.zone === 'primaire'; })
+      .forEach(function (it) { host.appendChild(buildModal(it)); });
+  }
+
+  // Synchronise les inputs d'une modale primaire avec l'état (après retrait d'un tag tertiaire)
+  function syncModalInputs(it) {
+    var v = S.values[it.id];
+    var sfx = 'panel-' + it.id;
+    if (it.type === 'multi' || it.type === 'mono') {
+      var isRadio = it.type === 'mono';
+      options(it).forEach(function (_, i) {
+        var el = document.getElementById('ctl-' + (isRadio ? 'r' : 'c') + '-' + sfx + '-' + i);
+        if (el) el.checked = isRadio ? (v.mono === i) : (v.multi.indexOf(i) >= 0);
+      });
+    } else if (it.type === 'bool') {
+      var b = document.getElementById('ctl-bool-' + sfx); if (b) b.checked = v.bool;
+    } else if (it.type === 'text') {
+      var t = document.getElementById('ctl-text-' + sfx); if (t && t.value !== v.text) t.value = v.text;
+    } else if (it.type === 'date') {
+      var f = document.getElementById('ctl-date-from-' + sfx); if (f) f.value = v.date.from;
+      var to = document.getElementById('ctl-date-to-' + sfx); if (to) to.value = v.date.to;
+    }
+  }
+
+  function renderPreview() {
+    var body = document.getElementById('preview-body');
+
+    // mémoriser le focus pour les champs éditables (texte/date)
+    var act = document.activeElement;
+    var focusId = (act && act.id && /^ctl-(text|date)/.test(act.id) && body.contains(act)) ? act.id : null;
+    var caret = (focusId && act.selectionStart != null) ? [act.selectionStart, act.selectionEnd] : null;
+
+    body.textContent = '';
+
+    var secTexts  = S.items.filter(function (it) { return it.zone === 'secondaire' && it.type === 'text'; });
+    var primItems = S.items.filter(function (it) { return it.zone === 'primaire'; });
+    var secOthers = S.items.filter(function (it) { return it.zone === 'secondaire' && it.type !== 'text'; });
+    var tertItems = S.items.filter(function (it) { return it.tertiary; });
+    var totalShown = secTexts.length + primItems.length + secOthers.length;
+
+    if (totalShown === 0) {
+      body.appendChild(h('p', { 'class': 'fr-text--sm', style: 'font-style:italic;color:var(--text-mention-grey)' },
+        'Aucun filtre configuré. Ouvre les réglages pour en ajouter.'));
+    } else {
+      // 1) champs texte exposés
+      secTexts.forEach(function (it) { body.appendChild(h('div', { 'class': 'fr-mb-4w' }, buildControl(it, { context: 'sec' }))); });
+
+      // 2) boutons primaires (chaque bouton DSFR ouvre sa modale ; rangée qui passe à la ligne)
+      if (primItems.length > 0) {
+        var row = h('div', { 'class': 'fr-mb-4w', style: 'display:flex;flex-wrap:wrap;gap:10px' });
+        primItems.forEach(function (it) { row.appendChild(buildPrimaryButton(it)); });
+        body.appendChild(row);
+      }
+
+      // 3) autres secondaires : interrupteurs puis blocs
+      var inlineSec = secOthers.filter(function (it) { return it.type === 'bool'; });
+      var blockSec  = secOthers.filter(function (it) { return it.type !== 'bool'; });
+      inlineSec.forEach(function (it) { body.appendChild(h('div', { 'class': 'fr-mb-3w' }, buildControl(it, { context: 'sec' }))); });
+      blockSec.forEach(function (it) { body.appendChild(h('div', { 'class': 'fr-mb-4w' }, buildControl(it, { context: 'sec' }))); });
+
+      // 4) tags tertiaires
+      var tertNodes = tertItems.map(buildTertiary).filter(function (n) { return n != null; });
+      if (tertNodes.length > 0) {
+        var tertWrap = h('div', { 'class': 'fr-pt-3w fr-mt-2w', style: 'border-top:1px solid var(--border-default-grey)' });
+        tertNodes.forEach(function (n) { tertWrap.appendChild(n); });
+        body.appendChild(tertWrap);
+      }
+    }
+
+    // garder modales et état cohérents
+    primItems.forEach(syncModalInputs);
+
+    // restaurer le focus
+    if (focusId) {
+      var again = document.getElementById(focusId);
+      if (again) {
+        again.focus();
+        if (caret && again.setSelectionRange) { try { again.setSelectionRange(caret[0], caret[1]); } catch (e) {} }
+      }
+    }
+  }
+
+  // Rendu complet : recompose le disclose, les modales (si le jeu de filtres change) et la preview
+  function render() {
+    renderSettings();
+    var sig = signature();
+    if (sig !== S.builtSignature) { renderModals(); S.builtSignature = sig; }
+    renderPreview();
+  }
+
+  // ──────────────────── Bootstrap ────────────────────
+  document.getElementById('add-row').addEventListener('click', addRow);
+
+  // jeu d'exemple par défaut (identique au prototype)
+  var seed = [
+    { type: 'text',  n: 0, longLabels: false, zone: 'secondaire', tertiary: false },
+    { type: 'multi', n: 7, longLabels: false, zone: 'primaire',   tertiary: true  },
+    { type: 'mono',  n: 4, longLabels: false, zone: 'primaire',   tertiary: true  },
+    { type: 'multi', n: 5, longLabels: false, zone: 'primaire',   tertiary: false },
+    { type: 'date',  n: 0, longLabels: false, zone: 'primaire',   tertiary: false },
+    { type: 'bool',  n: 0, longLabels: false, zone: 'secondaire', tertiary: false }
+  ];
+  seed.forEach(function (cfg) {
+    var id = S.nextId++;
+    S.items.push({ id: id, type: cfg.type, n: cfg.n || 5, longLabels: cfg.longLabels, zone: cfg.zone, tertiary: cfg.tertiary });
+    S.values[id] = defaultValues();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
