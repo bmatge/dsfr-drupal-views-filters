@@ -26,18 +26,23 @@
   .mh-reset:hover{background:var(--background-action-low-blue-france)}
 
   /* ───── Disclose de paramétrage : grille responsive ───── */
-  .setup-head,.setup-row{display:grid;grid-template-columns:140px 1fr 130px 130px 36px;gap:14px;align-items:center}
+  .setup-head,.setup-row{display:grid;grid-template-columns:140px 1fr 130px 130px 104px;gap:14px;align-items:center}
   .setup-row{padding:10px 0;border-bottom:1px solid var(--grey-200)}
   .setup-cell{min-width:0}
+  .setup-actions{display:inline-flex;align-items:center;gap:2px;justify-content:flex-end}
   .setup-mlabel{display:none}
   @media (max-width:640px){
     .page-wrap{padding:32px 16px 96px!important}
     .setup-head{display:none}
     .setup-row{grid-template-columns:1fr;gap:14px;align-items:stretch;padding:16px;margin-bottom:12px;border:1px solid var(--grey-200);background:rgba(255,255,255,.04)}
     .setup-mlabel{display:block;margin-bottom:6px;font:500 11px/16px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--grey-800)}
-    .setup-cell--del{margin-top:2px}
-    .setup-cell--del button{width:100%!important;height:42px!important;justify-content:center;border:1px solid var(--grey-625)!important;gap:8px}
-    .setup-cell--del button::after{content:'Supprimer la ligne';font:500 14px/1 var(--font-sans);color:var(--grey-800)}
+    .setup-cell--actions{margin-top:2px}
+    .setup-actions{display:flex;gap:8px}
+    .setup-actions button{flex:1;width:auto!important;height:42px!important;justify-content:center;border:1px solid var(--grey-625)!important;gap:8px}
+    .setup-actions button::after{font:500 14px/1 var(--font-sans);color:var(--grey-800)}
+    .setup-act--up::after{content:'Monter'}
+    .setup-act--down::after{content:'Descendre'}
+    .setup-act--del::after{content:'Supprimer'}
   }
 </style>
 </head>
@@ -185,6 +190,13 @@
     if (S.openPanelId === id) S.openPanelId = null;
     render();
   }
+  function moveRow(id, dir) {
+    var i = S.items.findIndex(function (x) { return x.id === id; });
+    var j = i + dir;
+    if (i < 0 || j < 0 || j >= S.items.length) return;
+    var t = S.items[i]; S.items[i] = S.items[j]; S.items[j] = t;
+    render();
+  }
   function setProp(id, prop, value) {
     var it = S.items.find(function (i) { return i.id === id; });
     if (!it) return;
@@ -276,11 +288,20 @@
       h('span', { style: 'color:var(--grey-800)' }, 'Restituer')
     );
 
-    var del = h('button', {
-      title: 'Supprimer cette ligne', 'aria-label': 'Supprimer cette ligne',
-      style: 'width:32px;height:32px;border:none;background:transparent;color:var(--grey-800);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border-radius:2px',
-      onClick: function () { removeRow(it.id); }
-    }, icon('ri-close-line', 'font-size:18px'));
+    var idx = S.items.indexOf(it), total = S.items.length;
+    function actBtn(mod, iconCls, title, disabled, onClick) {
+      return h('button', {
+        'class': 'setup-act ' + mod, title: title, 'aria-label': title,
+        disabled: disabled ? '' : null,
+        style: 'width:32px;height:32px;border:none;background:transparent;color:var(--grey-800);display:inline-flex;align-items:center;justify-content:center;border-radius:2px;cursor:' + (disabled ? 'default' : 'pointer') + ';opacity:' + (disabled ? '.35' : '1'),
+        onClick: disabled ? null : onClick
+      }, icon(iconCls, 'font-size:18px'));
+    }
+    var actions = h('div', { 'class': 'setup-actions' },
+      actBtn('setup-act--up', 'ri-arrow-up-s-line', 'Monter cette ligne', idx === 0, function () { moveRow(it.id, -1); }),
+      actBtn('setup-act--down', 'ri-arrow-down-s-line', 'Descendre cette ligne', idx === total - 1, function () { moveRow(it.id, 1); }),
+      actBtn('setup-act--del', 'ri-close-line', 'Supprimer cette ligne', false, function () { removeRow(it.id); })
+    );
 
     function cell(mlabel, content, mod) {
       return h('div', { 'class': 'setup-cell' + (mod ? ' setup-cell--' + mod : '') },
@@ -293,7 +314,7 @@
       cell('Caractéristiques', carac),
       cell('Zone', zoneSel),
       cell('Récap tertiaire', tertCell),
-      cell(null, del, 'del'));
+      cell(null, actions, 'actions'));
   }
 
   // ──────────────────── Calcul de layout pour input exposé ────────────────────
