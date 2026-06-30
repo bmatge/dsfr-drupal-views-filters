@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--background-alt-grey);font-family:var(--font-sans);color:var(--text-default-grey)}
+  code{font-family:var(--font-mono);font-size:13px;background:var(--grey-950);padding:1px 6px;border-radius:2px;color:var(--grey-100)}
+  button{font-family:inherit}
+  input[type=range]{accent-color:var(--blue-france-sun-113)}
+</style>
+</helmet>
+<div style="max-width:1000px;margin:0 auto;padding:44px 24px 120px">
+
+  <p style="margin:0 0 6px;font:700 13px/18px var(--font-sans);text-transform:uppercase;letter-spacing:.06em;color:var(--text-action-high-blue-france)">Prototype interactif · DSFR</p>
+  <h1 style="margin:0 0 26px;font:700 36px/44px var(--font-sans);color:var(--text-title-grey);letter-spacing:-.01em">Filtres exposés — bac à sable</h1>
+
+  <!-- ===== ZONE DE SETUP ===== -->
+  <div style="background:var(--grey-100);color:#fff;padding:24px 26px;margin-bottom:0">
+    <p style="margin:0 0 18px;font:700 13px/18px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--blue-france-moon-625);display:flex;align-items:center;gap:8px"><i class="ri-settings-3-line"></i>Réglages</p>
+
+    <div style="display:flex;flex-wrap:wrap;gap:28px 40px">
+      <div>
+        <p style="margin:0 0 8px;font:500 13px/18px var(--font-sans);color:var(--grey-800)">Type d'élément</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <sc-for list="{{ typeOptions }}" as="o"><button onClick="{{ o.onClick }}" style="{{ o.style }}">{{ o.label }}</button></sc-for>
+        </div>
+      </div>
+      <div>
+        <p style="margin:0 0 8px;font:500 13px/18px var(--font-sans);color:var(--grey-800)">Emplacement</p>
+        <div style="display:flex;gap:6px">
+          <sc-for list="{{ zoneOptions }}" as="o"><button onClick="{{ o.onClick }}" style="{{ o.style }}">{{ o.label }}</button></sc-for>
+        </div>
+      </div>
+    </div>
+
+    <sc-if value="{{ showOptionsControls }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-wrap:wrap;gap:28px 40px;margin-top:22px;padding-top:20px;border-top:1px solid var(--grey-200)">
+        <div>
+          <p style="margin:0 0 8px;font:500 13px/18px var(--font-sans);color:var(--grey-800)">Longueur des libellés</p>
+          <div style="display:flex;gap:6px">
+            <sc-for list="{{ labelLenOptions }}" as="o"><button onClick="{{ o.onClick }}" style="{{ o.style }}">{{ o.label }}</button></sc-for>
+          </div>
+        </div>
+        <div style="min-width:240px">
+          <p style="margin:0 0 8px;font:500 13px/18px var(--font-sans);color:var(--grey-800)">Nombre d'options : <strong style="color:#fff">{{ n }}</strong></p>
+          <input type="range" min="2" max="14" value="{{ n }}" onInput="{{ onN }}" style="width:240px">
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <!-- bandeau règle appliquée -->
+  <div style="background:var(--background-alt-blue-france);border:1px solid var(--border-action-low-blue-france);border-top:none;padding:14px 26px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center">
+    <span style="font:700 13px/18px var(--font-sans);text-transform:uppercase;letter-spacing:.04em;color:var(--text-action-high-blue-france)">Règle appliquée</span>
+    <span style="font:400 14px/20px var(--font-sans);color:var(--text-default-grey)">{{ ruleText }}</span>
+  </div>
+
+  <!-- ===== CANVAS DE RENDU ===== -->
+  <div style="background:#fff;border:1px solid var(--border-default-grey);border-top:none;padding:8px 0 0">
+    <div style="padding:10px 26px;border-bottom:1px solid var(--grey-900);display:flex;align-items:center;gap:8px"><i class="ri-eye-line" style="color:var(--text-mention-grey)"></i><span style="font:700 12px/1 var(--font-sans);text-transform:uppercase;letter-spacing:.04em;color:var(--text-mention-grey)">Rendu — zone {{ zoneLabel }}</span></div>
+    <div style="padding:34px 26px;min-height:160px">
+
+      <!-- PRIMAIRE : note (texte/booléen) -->
+      <sc-if value="{{ showPrimaireNote }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:0;font:400 16px/24px var(--font-sans);color:var(--text-mention-grey)"><i class="ri-information-line" style="color:var(--text-action-high-blue-france);margin-right:6px"></i>Ce type est <strong>exposé directement</strong> : pas de bouton primaire. Bascule sur <strong>Secondaire</strong> pour le voir.</p>
+      </sc-if>
+
+      <!-- PRIMAIRE : bouton -->
+      <sc-if value="{{ showButton }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ onTogglePanel }}" style="{{ buttonStyle }}">
+          <span>{{ buttonLabel }}</span>
+          <sc-if value="{{ buttonBadge }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border-radius:var(--radius-full);background:var(--background-action-high-blue-france);color:#fff;font:700 12px/1 var(--font-sans)">{{ buttonBadge }}</span></sc-if>
+          <i class="ri-arrow-right-s-line" style="font-size:18px"></i>
+        </button>
+      </sc-if>
+
+      <!-- CONTROL (secondaire, ou panneau primaire) -->
+      <sc-if value="{{ showControl }}" hint-placeholder-val="{{ true }}">
+        <div style="{{ controlWrapStyle }}">
+
+          <sc-if value="{{ isText }}" hint-placeholder-val="{{ false }}">
+            <label style="display:block;font:700 16px/24px var(--font-sans);margin-bottom:8px">Libellé du filtre</label>
+            <input type="text" value="{{ textValue }}" onInput="{{ onText }}" placeholder="Saisir un terme…" style="width:100%;max-width:380px;height:40px;padding:0 12px;border:none;background:var(--grey-975);box-shadow:inset 0 -2px 0 0 var(--grey-625);font:400 16px var(--font-sans);color:var(--text-default-grey)">
+          </sc-if>
+
+          <sc-if value="{{ isBool }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="font:400 16px/24px var(--font-sans)">Libellé du booléen</span>
+              <button onClick="{{ onToggleBool }}" role="switch" aria-checked="{{ boolOn }}" style="{{ boolTrackStyle }}"><span style="{{ boolThumbStyle }}"></span></button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isDate }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:0 0 8px;font:700 16px/24px var(--font-sans)">Libellé du filtre</p>
+            <div style="display:flex;gap:14px;max-width:380px">
+              <div style="flex:1"><label style="display:block;font:500 13px/20px var(--font-sans);margin-bottom:4px">Du</label><input type="date" value="{{ dateFrom }}" onInput="{{ onDateFrom }}" style="width:100%;height:40px;padding:0 10px;border:none;background:var(--grey-975);box-shadow:inset 0 -2px 0 0 var(--grey-625);font:400 14px var(--font-sans)"></div>
+              <div style="flex:1"><label style="display:block;font:500 13px/20px var(--font-sans);margin-bottom:4px">Au</label><input type="date" value="{{ dateTo }}" onInput="{{ onDateTo }}" style="width:100%;height:40px;padding:0 10px;border:none;background:var(--grey-975);box-shadow:inset 0 -2px 0 0 var(--grey-625);font:400 14px var(--font-sans)"></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isChoice }}" hint-placeholder-val="{{ false }}">
+            <div style="{{ groupWrapStyle }}">
+              <span style="{{ groupLabelStyle }}">Libellé du filtre</span>
+              <div style="{{ valuesContainerStyle }}">
+                <sc-for list="{{ optionItems }}" as="o" hint-placeholder-count="4">
+                  <button onClick="{{ o.onToggle }}" style="{{ o.itemStyle }}">
+                    <span style="{{ o.boxStyle }}"><sc-if value="{{ o.showIcon }}" hint-placeholder-val="{{ false }}"><i class="{{ o.iconClass }}" style="{{ o.iconStyle }}"></i></sc-if></span>
+                    <span>{{ o.label }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+        </div>
+      </sc-if>
+
+      <!-- TERTIAIRE : tags -->
+      <sc-if value="{{ showTags }}" hint-placeholder-val="{{ false }}">
+        <sc-if value="{{ hasTags }}" hint-placeholder-val="{{ true }}">
+          <div style="{{ tagsWrapStyle }}">
+            <sc-if value="{{ tagsShowLabel }}" hint-placeholder-val="{{ true }}"><span style="{{ tagsLabelStyle }}">Libellé du filtre :</span></sc-if>
+            <sc-for list="{{ tags }}" as="t" hint-placeholder-count="2">
+              <span style="display:inline-flex;align-items:flex-start;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:18px;font:500 14px/20px var(--font-sans);max-width:100%">
+                <span>{{ t.text }}</span>
+                <button onClick="{{ t.onRemove }}" aria-label="Retirer" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:50%;background:transparent;color:inherit;cursor:pointer;flex:none"><i class="ri-close-line" style="font-size:15px"></i></button>
+              </span>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noTags }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:0;font:400 16px/24px var(--font-sans);color:var(--text-mention-grey)">Aucune valeur sélectionnée. Bascule sur <strong>Secondaire</strong> pour en choisir.</p>
+        </sc-if>
+      </sc-if>
+
+    </div>
+  </div>
+
+  <p style="margin:18px 0 0;font:400 13px/20px var(--font-sans);color:var(--text-mention-grey)">Astuce : choisis le type et l'emplacement ci-dessus. En <strong>Secondaire</strong>, clique les cases / le toggle — le compteur de la <strong>Primaire</strong> et les tags de la <strong>Tertiaire</strong> suivent la même sélection.</p>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    this.state = {
+      type:'multi', n:7, longLabels:false, zone:'secondaire', panelOpen:false,
+      sel:{ multi:[0,1], mono:0, bool:true, text:'recherche', date:{from:'2025-01-01',to:'2025-06-30'} }
+    };
+  }
+
+  label(i){
+    const num = String(i+1).padStart(2,'0');
+    return this.state.longLabels ? ('Option dont le libellé est une phrase descriptive '+num) : ('Valeur '+num);
+  }
+  options(){ return Array.from({length:this.state.n}, (_,i)=>this.label(i)); }
+  maxLen(){ return this.state.longLabels ? 48 : 9; }
+
+  setType(t){
+    let zone=this.state.zone;
+    if((t==='text'||t==='bool') && zone==='primaire') zone='secondaire';
+    this.setState({ type:t, zone, panelOpen:false });
+  }
+  setZone(z){ this.setState({ zone:z, panelOpen:false }); }
+  setLong(v){ this.setState({ longLabels:v }); }
+  setN(e){
+    const n=parseInt(e.target.value,10);
+    this.setState(s=>({ n, sel:{...s.sel, multi:s.sel.multi.filter(i=>i<n), mono: s.sel.mono!=null&&s.sel.mono<n? s.sel.mono : null } }));
+  }
+  togglePanel(){ this.setState(s=>({ panelOpen:!s.panelOpen })); }
+
+  toggleMulti(i){ this.setState(s=>{ const a=s.sel.multi.slice(); const k=a.indexOf(i); if(k>=0)a.splice(k,1); else a.push(i); return {sel:{...s.sel,multi:a}}; }); }
+  setMono(i){ this.setState(s=>({ sel:{...s.sel, mono: s.sel.mono===i? null : i} })); }
+  toggleBool(){ this.setState(s=>({ sel:{...s.sel, bool:!s.sel.bool} })); }
+  setText(e){ const v=e.target.value; this.setState(s=>({ sel:{...s.sel,text:v} })); }
+  setDate(f,e){ const v=e.target.value; this.setState(s=>({ sel:{...s.sel, date:{...s.sel.date,[f]:v}} })); }
+
+  fmtDate(d){
+    const f=(x)=>{ if(!x)return''; const [y,m,da]=x.split('-'); return da+'/'+m+'/'+y; };
+    if(d.from&&d.to) return 'du '+f(d.from)+' au '+f(d.to);
+    if(d.from) return 'depuis le '+f(d.from);
+    if(d.to) return "jusqu'au "+f(d.to);
+    return '';
+  }
+
+  seg(active){
+    return active
+      ? 'height:34px;padding:0 14px;border:1px solid var(--blue-france-moon-625);background:var(--blue-france-moon-625);color:var(--grey-100);font:500 14px/1 var(--font-sans);cursor:pointer'
+      : 'height:34px;padding:0 14px;border:1px solid var(--grey-625);background:transparent;color:#fff;font:500 14px/1 var(--font-sans);cursor:pointer';
+  }
+
+  renderVals(){
+    const S=this.state;
+    const isChoice = S.type==='mono'||S.type==='multi';
+    const isText=S.type==='text', isBool=S.type==='bool', isDate=S.type==='date';
+    const ml = isChoice ? Math.max(...this.options().map(o=>o.length)) : 0;
+
+    // décisions layout secondaire
+    const valeursVertical = isChoice && (S.longLabels || S.n>10);
+    const groupeLigne = isBool || (isChoice && S.n<=3 && !S.longLabels);
+    let ruleText;
+    if(isText) ruleText='Groupe : bloc (label au-dessus) · Champ pleine largeur.';
+    else if(isBool) ruleText='Groupe : en ligne (label + interrupteur).';
+    else if(isDate) ruleText='Groupe : bloc · Deux champs Du / Au en ligne.';
+    else ruleText='Groupe : '+(groupeLigne?'en ligne':'bloc')+' · Valeurs : '+(valeursVertical?'liste verticale':'inline-wrap (passage à la ligne)')+'.';
+
+    // setup segmented
+    const typeOptions=[['text','Texte'],['bool','Booléen'],['mono','Monovalué'],['multi','Multivalué'],['date','Date']]
+      .map(([k,l])=>({label:l,style:this.seg(S.type===k),onClick:()=>this.setType(k)}));
+    const zoneOptions=[['primaire','Primaire'],['secondaire','Secondaire'],['tertiaire','Tertiaire']]
+      .map(([k,l])=>({label:l,style:this.seg(S.zone===k),onClick:()=>this.setZone(k)}));
+    const labelLenOptions=[[false,'Courts'],[true,'Longs']]
+      .map(([v,l])=>({label:l,style:this.seg(S.longLabels===v),onClick:()=>this.setLong(v)}));
+
+    // zones flags
+    const zonePrimaire=S.zone==='primaire', zoneSecondaire=S.zone==='secondaire', zoneTertiaire=S.zone==='tertiaire';
+    const exposedDirect = isText||isBool;
+    const showPrimaireNote = zonePrimaire && exposedDirect;
+    const showButton = zonePrimaire && !exposedDirect;
+    const showControl = zoneSecondaire || (zonePrimaire && S.panelOpen && !exposedDirect);
+    const showTags = zoneTertiaire;
+    const zoneLabel = S.zone==='primaire'?'primaire':S.zone==='secondaire'?'secondaire':'tertiaire';
+
+    // bouton primaire
+    let buttonLabel='Libellé du filtre', buttonBadge='';
+    if(S.type==='multi'){ buttonBadge=S.sel.multi.length||''; }
+    else if(S.type==='mono'){ if(S.sel.mono!=null) buttonLabel='Libellé : '+this.label(S.sel.mono); }
+    else if(S.type==='date'){ const t=this.fmtDate(S.sel.date); if(t) buttonLabel='Libellé : '+t; }
+    const renseigne = (S.type==='multi'&&S.sel.multi.length)||(S.type==='mono'&&S.sel.mono!=null)||(S.type==='date'&&this.fmtDate(S.sel.date));
+    const buttonStyle = (renseigne||S.panelOpen)
+      ? 'display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;background:var(--background-action-low-blue-france);border:1px solid var(--border-action-high-blue-france);color:var(--text-action-high-blue-france);font:500 16px/24px var(--font-sans);cursor:pointer'
+      : 'display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;background:#fff;border:1px solid var(--border-action-low-blue-france);color:var(--text-action-high-blue-france);font:500 16px/24px var(--font-sans);cursor:pointer';
+
+    const controlWrapStyle = (zonePrimaire && S.panelOpen)
+      ? 'margin-top:10px;border:1px solid var(--border-default-grey);background:#fff;box-shadow:var(--raised-shadow);padding:22px;max-width:580px'
+      : '';
+
+    // bool toggle styles
+    const boolOn=S.sel.bool;
+    const boolTrackStyle = boolOn
+      ? 'position:relative;width:40px;height:24px;border-radius:var(--radius-full);border:none;background:var(--background-action-high-blue-france);cursor:pointer;padding:0;flex:none'
+      : 'position:relative;width:40px;height:24px;border-radius:var(--radius-full);border:1px solid var(--border-action-high-blue-france);background:#fff;cursor:pointer;padding:0;flex:none';
+    const boolThumbStyle = boolOn
+      ? 'position:absolute;top:3px;left:19px;width:18px;height:18px;border-radius:50%;background:#fff'
+      : 'position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--background-action-high-blue-france)';
+
+    // choice group + values
+    const groupWrapStyle = groupeLigne ? 'display:flex;align-items:baseline;gap:20px;flex-wrap:wrap' : 'display:block';
+    const groupLabelStyle = groupeLigne ? 'font:700 16px/24px var(--font-sans);flex:none' : 'display:block;font:700 16px/24px var(--font-sans);margin-bottom:12px';
+    const valuesContainerStyle = valeursVertical
+      ? 'display:flex;flex-direction:column;gap:14px;max-width:480px'
+      : 'display:flex;flex-wrap:wrap;gap:12px 22px;max-width:520px';
+
+    const isRadio = S.type==='mono';
+    const boxBase='width:20px;height:20px;flex:none;display:inline-flex;align-items:center;justify-content:center;';
+    const optionItems = this.options().map((lab,i)=>{
+      const checked = isRadio ? S.sel.mono===i : S.sel.multi.indexOf(i)>=0;
+      let boxStyle, showIcon=false, iconClass='', iconStyle='';
+      if(isRadio){
+        boxStyle = boxBase+'border-radius:50%;border:2px solid var(--border-action-high-blue-france);background:#fff;';
+        if(checked){ showIcon=true; iconClass='ri-circle-fill'; iconStyle='font-size:11px;color:var(--background-action-high-blue-france)'; }
+      } else {
+        if(checked){ boxStyle=boxBase+'background:var(--background-action-high-blue-france);'; showIcon=true; iconClass='ri-check-line'; iconStyle='color:#fff;font-size:14px'; }
+        else boxStyle=boxBase+'border:2px solid var(--border-action-high-blue-france);background:#fff;';
+      }
+      const itemStyle='display:inline-flex;align-items:'+(valeursVertical&&S.longLabels?'flex-start':'center')+';gap:8px;font:400 16px/'+(S.longLabels?'22':'24')+'px var(--font-sans);background:none;border:none;padding:0;cursor:pointer;text-align:left;color:var(--text-default-grey)';
+      return { label:lab, boxStyle, showIcon, iconClass, iconStyle, itemStyle, onToggle: isRadio?()=>this.setMono(i):()=>this.toggleMulti(i) };
+    });
+
+    // tags tertiaire
+    let tags=[], tagsShowLabel=true;
+    if(S.type==='text'){ if(S.sel.text) tags=[{text:'« '+S.sel.text+' »', onRemove:()=>this.setState(s=>({sel:{...s.sel,text:''}}))}]; }
+    else if(S.type==='bool'){ tagsShowLabel=false; if(S.sel.bool) tags=[{text:'Libellé du booléen', onRemove:()=>this.toggleBool()}]; }
+    else if(S.type==='date'){ const t=this.fmtDate(S.sel.date); if(t) tags=[{text:t, onRemove:()=>this.setState(s=>({sel:{...s.sel,date:{from:'',to:''}}}))}]; }
+    else if(S.type==='mono'){ if(S.sel.mono!=null) tags=[{text:this.label(S.sel.mono), onRemove:()=>this.setMono(S.sel.mono)}]; }
+    else { tags=S.sel.multi.slice().sort((a,b)=>a-b).map(i=>({text:this.label(i), onRemove:()=>this.toggleMulti(i)})); }
+
+    const tertiaireBloc = S.type==='multi' && (tags.length>=5 || S.longLabels);
+    const tagsWrapStyle='display:flex;flex-wrap:wrap;align-items:baseline;gap:8px';
+    const tagsLabelStyle = tertiaireBloc ? 'font:700 15px/20px var(--font-sans);flex-basis:100%' : 'font:700 15px/20px var(--font-sans);flex:none';
+
+    return {
+      // setup
+      typeOptions, zoneOptions, labelLenOptions, n:S.n, onN:(e)=>this.setN(e),
+      showOptionsControls:isChoice,
+      ruleText, zoneLabel,
+      // flags
+      showPrimaireNote, showButton, showControl, showTags,
+      isText, isBool, isDate, isChoice,
+      // button
+      onTogglePanel:()=>this.togglePanel(), buttonLabel, buttonBadge, buttonStyle, controlWrapStyle,
+      // text
+      textValue:S.sel.text, onText:(e)=>this.setText(e),
+      // bool
+      boolOn, onToggleBool:()=>this.toggleBool(), boolTrackStyle, boolThumbStyle,
+      // date
+      dateFrom:S.sel.date.from, dateTo:S.sel.date.to, onDateFrom:(e)=>this.setDate('from',e), onDateTo:(e)=>this.setDate('to',e),
+      // choice
+      groupWrapStyle, groupLabelStyle, valuesContainerStyle, optionItems,
+      // tags
+      tags, hasTags:tags.length>0, noTags:tags.length===0, tagsShowLabel, tagsWrapStyle, tagsLabelStyle
+    };
+  }
+}
+</script>
+</body>
+</html>

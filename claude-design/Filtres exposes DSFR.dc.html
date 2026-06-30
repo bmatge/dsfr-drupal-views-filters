@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="colors_and_type.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--background-alt-grey);font-family:var(--font-sans);color:var(--text-default-grey)}
+  @keyframes slidein{from{transform:translateX(100%)}to{transform:translateX(0)}}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  button{font-family:inherit}
+</style>
+</helmet>
+<div style="max-width:1180px;margin:0 auto;padding:40px 24px 96px">
+
+  <!-- INTRO / NOTE -->
+  <div style="border-left:4px solid var(--border-action-high-blue-france);background:var(--background-alt-blue-france);padding:20px 24px;margin-bottom:40px">
+    <p style="margin:0 0 6px;font:700 14px/20px var(--font-sans);text-transform:uppercase;letter-spacing:.04em;color:var(--text-action-high-blue-france)">Note de cadrage — rationalisation des filtres exposés Drupal</p>
+    <p style="margin:0;font:400 16px/26px var(--font-sans);color:var(--text-default-grey);max-width:820px">Deux zones. <strong>Zone 1</strong> : une barre de boutons (un par filtre) ouvrant un panneau latéral, <em>un seul à la fois</em>, plus les filtres booléens exposés directement. <strong>Zone 2</strong> : les filtres actifs avec leurs valeurs. La règle d'affichage (bloc vs inline) est unique et automatique — détaillée dans le référentiel en bas de page.</p>
+  </div>
+
+  <!-- ============ ZONE 1 — BARRE DE FILTRES ============ -->
+  <div style="background:var(--background-default-grey);border:1px solid var(--border-default-grey);padding:28px 28px 32px;margin-bottom:24px">
+    <h2 style="margin:0 0 22px;font:700 24px/32px var(--font-sans);color:var(--text-title-grey)">Affiner votre recherche</h2>
+
+    <!-- recherche + localisation -->
+    <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:22px">
+      <div style="flex:1 1 320px;min-width:260px">
+        <label style="display:block;font:500 14px/24px var(--font-sans);margin-bottom:6px">Taper un métier, mot-clé ou référence</label>
+        <input type="text" value="{{ searchValue }}" onInput="{{ onSearch }}" placeholder="ex : juriste, achats, 2024-…" style="width:100%;height:40px;padding:0 12px;border:none;background:var(--grey-975);box-shadow:inset 0 -2px 0 0 var(--grey-625);font:400 16px/24px var(--font-sans);color:var(--text-default-grey)">
+      </div>
+    </div>
+
+    <!-- boutons filtres -->
+    <p style="margin:0 0 8px;font:500 13px/20px var(--font-sans);color:var(--text-mention-grey);text-transform:uppercase;letter-spacing:.04em">Filtres — un clic ouvre le panneau de sélection</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px">
+      <sc-for list="{{ buttons }}" as="b" hint-placeholder-count="6">
+        <button onClick="{{ b.onOpen }}" style="{{ b.style }}">
+          <span>{{ b.label }}</span>
+          <sc-if value="{{ b.count }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border-radius:var(--radius-full);background:var(--background-action-high-blue-france);color:var(--text-inverted-grey);font:700 12px/1 var(--font-sans)">{{ b.count }}</span></sc-if>
+          <i class="ri-arrow-right-s-line" style="font-size:18px;line-height:1"></i>
+        </button>
+      </sc-for>
+    </div>
+
+    <!-- booléens exposés directement + bouton rechercher -->
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:28px;padding-top:20px;border-top:1px solid var(--border-default-grey)">
+      <sc-for list="{{ bools }}" as="bo" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font:400 16px/24px var(--font-sans)">{{ bo.label }}</span>
+          <button onClick="{{ bo.onToggle }}" role="switch" aria-checked="{{ bo.on }}" style="{{ bo.trackStyle }}"><span style="{{ bo.thumbStyle }}"></span></button>
+        </div>
+      </sc-for>
+      <button onClick="{{ onSearchBtn }}" style="margin-left:auto;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 18px;border:none;background:var(--background-action-high-blue-france);color:var(--text-inverted-grey);font:500 16px/24px var(--font-sans);cursor:pointer"><i class="ri-search-line" style="font-size:18px"></i>Rechercher</button>
+    </div>
+  </div>
+
+  <!-- ============ ZONE 2 — FILTRES ACTIFS ============ -->
+  <div style="background:var(--background-default-grey);border:1px solid var(--border-default-grey);padding:24px 28px;margin-bottom:56px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:16px">
+      <h3 style="margin:0;font:700 18px/28px var(--font-sans);color:var(--text-title-grey)">Filtres actifs <span style="color:var(--text-mention-grey);font-weight:400">({{ activeCount }})</span></h3>
+      <sc-if value="{{ hasActive }}" hint-placeholder-val="{{ true }}"><button onClick="{{ onClearAll }}" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--text-action-high-blue-france);font:500 14px/20px var(--font-sans);text-decoration:underline;cursor:pointer"><i class="ri-delete-bin-line"></i>Tout effacer</button></sc-if>
+    </div>
+
+    <sc-if value="{{ hasActive }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ activeGroups }}" as="g" hint-placeholder-count="0">
+          <div style="{{ g.wrapStyle }}">
+            <sc-if value="{{ g.showLabel }}" hint-placeholder-val="{{ true }}"><span style="{{ g.labelStyle }}">{{ g.labelText }}</span></sc-if>
+            <sc-for list="{{ g.tags }}" as="t">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans);max-width:100%">
+                <span>{{ t.text }}</span>
+                <button onClick="{{ t.onRemove }}" aria-label="Retirer" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;border-radius:50%;background:transparent;color:inherit;cursor:pointer;flex:none"><i class="ri-close-line" style="font-size:15px"></i></button>
+              </span>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ noneActive }}" hint-placeholder-val="{{ false }}">
+      <p style="margin:4px 0 0;font:400 16px/24px var(--font-sans);color:var(--text-mention-grey)">Aucun filtre appliqué. Sélectionnez des valeurs dans la barre ci-dessus.</p>
+    </sc-if>
+  </div>
+
+  <!-- ============ RÉFÉRENTIEL DES CAS ============ -->
+  <div style="border-top:3px solid var(--border-action-high-blue-france);padding-top:32px">
+    <h2 style="margin:0 0 4px;font:700 28px/36px var(--font-sans);color:var(--text-title-grey)">Référentiel — comment chaque type de filtre s'affiche</h2>
+    <p style="margin:0 0 32px;font:400 16px/26px var(--font-sans);color:var(--text-mention-grey);max-width:780px">La zone des filtres actifs applique <strong>une seule règle</strong> à tous les groupes. Le conteneur est toujours <code style="font-family:var(--font-mono);background:var(--grey-950);padding:1px 5px;font-size:13px">flex; flex-wrap:wrap; align-items:baseline</code>. On passe le label en <code style="font-family:var(--font-mono);background:var(--grey-950);padding:1px 5px;font-size:13px">flex-basis:100%</code> (valeurs en bloc dessous) <strong>uniquement si</strong> ≥ 5 valeurs <strong>ou</strong> une valeur &gt; 28 caractères.</p>
+
+    <!-- grille de cas -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px">
+
+      <!-- CAS 1 mono -->
+      <div style="background:var(--background-default-grey);border:1px solid var(--border-default-grey);padding:20px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font:700 13px/1 var(--font-sans);color:var(--text-inverted-grey);background:var(--background-action-high-blue-france);padding:3px 7px;border-radius:var(--radius-sm)">1</span><span style="font:700 16px/24px var(--font-sans)">Monovalué — 1 valeur</span></div>
+        <p style="margin:0 0 14px;font:400 13px/20px var(--font-sans);color:var(--text-mention-grey)">Bouton radio dans le panneau. Toujours <strong>inline</strong>.</p>
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:12px;background:var(--grey-975)">
+          <span style="font:700 14px/20px var(--font-sans);flex:none">Catégorie :</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans)">Catégorie A<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+        </div>
+      </div>
+
+      <!-- CAS 2 booleen -->
+      <div style="background:var(--background-default-grey);border:1px solid var(--border-default-grey);padding:20px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font:700 13px/1 var(--font-sans);color:var(--text-inverted-grey);background:var(--background-action-high-blue-france);padding:3px 7px;border-radius:var(--radius-sm)">2</span><span style="font:700 16px/24px var(--font-sans)">Booléen — activé</span></div>
+        <p style="margin:0 0 14px;font:400 13px/20px var(--font-sans);color:var(--text-mention-grey)">Interrupteur exposé. Le <strong>nom seul</strong> sert de tag (pas de « : »).</p>
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:12px;background:var(--grey-975)">
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans)">Télétravail possible<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+        </div>
+      </div>
+
+      <!-- CAS 3 date -->
+      <div style="background:var(--background-default-grey);border:1px solid var(--border-default-grey);padding:20px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font:700 13px/1 var(--font-sans);color:var(--text-inverted-grey);background:var(--background-action-high-blue-france);padding:3px 7px;border-radius:var(--radius-sm)">3</span><span style="font:700 16px/24px var(--font-sans)">Date — intervalle</span></div>
+        <p style="margin:0 0 14px;font:400 13px/20px var(--font-sans);color:var(--text-mention-grey)">Deux champs date (Du / Au). 1 tag intervalle, <strong>inline</strong>.</p>
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:12px;background:var(--grey-975)">
+          <span style="font:700 14px/20px var(--font-sans);flex:none">Date de publication :</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans)">du 01/01/2025 au 30/06/2025<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+        </div>
+      </div>
+
+      <!-- CAS 4 multi peu -->
+      <div style="background:var(--background-default-grey);border:1px solid var(--border-default-grey);padding:20px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font:700 13px/1 var(--font-sans);color:var(--text-inverted-grey);background:var(--background-action-high-blue-france);padding:3px 7px;border-radius:var(--radius-sm)">4</span><span style="font:700 16px/24px var(--font-sans)">Multivalué — 2 à 4 valeurs</span></div>
+        <p style="margin:0 0 14px;font:400 13px/20px var(--font-sans);color:var(--text-mention-grey)">Cases à cocher. Reste <strong>inline</strong>, les tags <em>wrappent</em>.</p>
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:12px;background:var(--grey-975)">
+          <span style="font:700 14px/20px var(--font-sans);flex:none">Domaine :</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans)">Numérique<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans)">Juridique<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans)">Achats publics<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+        </div>
+      </div>
+
+      <!-- CAS 5 multi beaucoup -->
+      <div style="background:var(--background-default-grey);border:1px solid var(--border-default-grey);padding:20px;grid-column:span 2">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font:700 13px/1 var(--font-sans);color:var(--text-inverted-grey);background:var(--background-action-high-blue-france);padding:3px 7px;border-radius:var(--radius-sm)">5</span><span style="font:700 16px/24px var(--font-sans)">Multivalué — 5 valeurs ou plus → bascule en bloc</span></div>
+        <p style="margin:0 0 14px;font:400 13px/20px var(--font-sans);color:var(--text-mention-grey)">Le label passe seul sur sa ligne (<code style="font-family:var(--font-mono);background:var(--grey-950);padding:1px 5px;font-size:12px">flex-basis:100%</code>), les valeurs <strong>en bloc dessous</strong>.</p>
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:12px;background:var(--grey-975)">
+          <span style="font:700 14px/20px var(--font-sans);flex-basis:100%">Domaine :</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans)">Numérique<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans)">Juridique<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans)">Finances publiques<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans)">Communication<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans)">Statistiques<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans)">International<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+        </div>
+      </div>
+
+      <!-- CAS 6 valeurs longues -->
+      <div style="background:var(--background-default-grey);border:1px solid var(--border-default-grey);padding:20px;grid-column:span 2">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font:700 13px/1 var(--font-sans);color:var(--text-inverted-grey);background:var(--background-action-high-blue-france);padding:3px 7px;border-radius:var(--radius-sm)">6</span><span style="font:700 16px/24px var(--font-sans)">Valeurs longues → bloc dès 2 valeurs</span></div>
+        <p style="margin:0 0 14px;font:400 13px/20px var(--font-sans);color:var(--text-mention-grey)">Une valeur &gt; 28 caractères force le mode bloc, même peu nombreuses. Le tag s'autorise à passer sur 2 lignes (<code style="font-family:var(--font-mono);background:var(--grey-950);padding:1px 5px;font-size:12px">white-space:normal</code>).</p>
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:12px;background:var(--grey-975)">
+          <span style="font:700 14px/20px var(--font-sans);flex-basis:100%">Voie d'accès :</span>
+          <span style="display:inline-flex;align-items:flex-start;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:18px;font:500 14px/20px var(--font-sans);max-width:100%">Concours externe<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center;flex:none"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+          <span style="display:inline-flex;align-items:flex-start;gap:6px;padding:6px 8px 6px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:18px;font:500 14px/20px var(--font-sans);max-width:100%">Concours / Examens professionnels réservés MEF<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center;flex:none"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+        </div>
+      </div>
+
+      <!-- CAS 7 recherche texte -->
+      <div style="background:var(--background-default-grey);border:1px solid var(--border-default-grey);padding:20px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font:700 13px/1 var(--font-sans);color:var(--text-inverted-grey);background:var(--background-action-high-blue-france);padding:3px 7px;border-radius:var(--radius-sm)">7</span><span style="font:700 16px/24px var(--font-sans)">Recherche texte</span></div>
+        <p style="margin:0 0 14px;font:400 13px/20px var(--font-sans);color:var(--text-mention-grey)">Saisie libre. 1 tag, <strong>inline</strong>, valeur entre guillemets.</p>
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:12px;background:var(--grey-975)">
+          <span style="font:700 14px/20px var(--font-sans);flex:none">Mot-clé :</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 12px;background:var(--background-action-low-blue-france);color:var(--text-action-high-blue-france);border-radius:var(--radius-full);font:500 14px/20px var(--font-sans)">«&nbsp;juriste&nbsp;»<span style="display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center"><i class="ri-close-line" style="font-size:15px"></i></span></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============ PANNEAU LATÉRAL ============ -->
+<sc-if value="{{ panel.open }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;z-index:50">
+    <div onClick="{{ panel.onClose }}" style="position:absolute;inset:0;background:var(--background-overlap);animation:fadein .12s ease-out"></div>
+    <aside style="position:absolute;top:0;right:0;height:100%;width:min(440px,92vw);background:var(--background-default-grey);box-shadow:var(--overlap-shadow);display:flex;flex-direction:column;animation:slidein .14s ease-out">
+      <div style="display:flex;justify-content:flex-end;padding:12px 20px 0">
+        <button onClick="{{ panel.onClose }}" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--text-action-high-blue-france);font:500 14px/20px var(--font-sans);cursor:pointer">Fermer<i class="ri-close-line" style="font-size:18px"></i></button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 28px 16px">
+        <i class="ri-arrow-right-line" style="font-size:22px;color:var(--text-action-high-blue-france)"></i>
+        <h2 style="margin:0;font:700 22px/28px var(--font-sans);color:var(--text-title-grey)">{{ panel.label }}</h2>
+      </div>
+      <div style="flex:1;overflow:auto;padding:8px 28px 24px;border-top:1px solid var(--border-default-grey)">
+
+        <sc-if value="{{ panel.isDate }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:18px;padding-top:8px">
+            <div><label style="display:block;font:500 14px/24px var(--font-sans);margin-bottom:6px">Du</label><input type="date" value="{{ panel.dateFrom }}" onInput="{{ panel.onDateFrom }}" style="width:100%;height:40px;padding:0 12px;border:none;background:var(--grey-975);box-shadow:inset 0 -2px 0 0 var(--grey-625);font:400 16px var(--font-sans)"></div>
+            <div><label style="display:block;font:500 14px/24px var(--font-sans);margin-bottom:6px">Au</label><input type="date" value="{{ panel.dateTo }}" onInput="{{ panel.onDateTo }}" style="width:100%;height:40px;padding:0 12px;border:none;background:var(--grey-975);box-shadow:inset 0 -2px 0 0 var(--grey-625);font:400 16px var(--font-sans)"></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ panel.isChoice }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;padding-top:4px">
+            <sc-for list="{{ panel.options }}" as="o" hint-placeholder-count="4">
+              <button onClick="{{ o.onToggle }}" style="display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;background:none;border:none;padding:12px 0;border-bottom:1px solid var(--grey-950);cursor:pointer">
+                <span style="{{ o.boxStyle }}"><sc-if value="{{ o.selected }}" hint-placeholder-val="{{ false }}"><i class="{{ o.checkIcon }}" style="font-size:14px;color:var(--text-inverted-grey)"></i></sc-if></span>
+                <span style="font:400 16px/24px var(--font-sans);color:var(--text-default-grey)">{{ o.label }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div style="padding:16px 28px;border-top:1px solid var(--border-default-grey);display:flex;flex-direction:column;gap:10px">
+        <button onClick="{{ panel.onClose }}" style="width:100%;height:44px;border:none;background:var(--background-action-high-blue-france);color:var(--text-inverted-grey);font:500 16px/24px var(--font-sans);cursor:pointer">Voir les offres</button>
+        <button onClick="{{ panel.onClearThis }}" style="width:100%;height:40px;border:none;background:none;color:var(--text-action-high-blue-france);font:500 14px/20px var(--font-sans);text-decoration:underline;cursor:pointer">Réinitialiser ce filtre</button>
+      </div>
+    </aside>
+  </div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    this.state = {
+      search: 'juriste',
+      values: {
+        domaine: ['Numérique','Juridique'],
+        categorie: 'Catégorie A',
+        voie: [],
+        datePub: { from:'', to:'' },
+        nature: [],
+        experience: ''
+      },
+      bools: { teletravail:true, management:false, inscription:false },
+      openPanel: null
+    };
+  }
+
+  defs(){
+    return {
+      domaine:    { label:'Domaine', type:'multi', options:['Numérique','Juridique','Finances publiques','Ressources humaines','Communication','Achats publics','Statistiques','International','Développement durable'] },
+      categorie:  { label:'Catégorie', type:'mono', options:['Catégorie A','Catégorie B','Catégorie C'] },
+      voie:       { label:"Voie d'accès", type:'multi', options:['Concours externe','Concours interne','Concours / Examens professionnels réservés MEF','Recrutement sans concours','Contrat de projet'] },
+      datePub:    { label:'Date de publication', type:'date' },
+      nature:     { label:"Nature de l'emploi", type:'multi', options:['Emploi ouvert aux titulaires et aux contractuels','Emploi réservé aux fonctionnaires et lauréats','Emploi ouvert uniquement aux contractuels'] },
+      experience: { label:'Expérience souhaitée', type:'mono', options:['Débutant accepté','1 à 5 ans','Plus de 5 ans'] }
+    };
+  }
+  boolDefs(){ return { teletravail:'Télétravail possible', management:'Management', inscription:'Inscription ouverte' }; }
+
+  count(id){
+    const d = this.defs()[id]; const v = this.state.values[id];
+    if(d.type==='multi') return (v&&v.length)||0;
+    if(d.type==='mono') return v?1:0;
+    if(d.type==='date') return (v&&(v.from||v.to))?1:0;
+    return 0;
+  }
+
+  fmtDate(d){
+    const f=(s)=>{ if(!s) return ''; const [y,m,da]=s.split('-'); return da+'/'+m+'/'+y; };
+    if(d.from && d.to) return 'du '+f(d.from)+' au '+f(d.to);
+    if(d.from) return 'depuis le '+f(d.from);
+    if(d.to) return "jusqu'au "+f(d.to);
+    return '';
+  }
+
+  setSearch(e){ this.setState({ search:e.target.value }); }
+  toggleBool(id){ this.setState(s=>({ bools:{...s.bools,[id]:!s.bools[id]} })); }
+  openPanel(id){ this.setState({ openPanel:id }); }
+  closePanel(){ this.setState({ openPanel:null }); }
+
+  toggleMulti(id,opt){
+    this.setState(s=>{
+      const arr = s.values[id].slice();
+      const i = arr.indexOf(opt);
+      if(i>=0) arr.splice(i,1); else arr.push(opt);
+      return { values:{...s.values,[id]:arr} };
+    });
+  }
+  setMono(id,opt){
+    this.setState(s=>({ values:{...s.values,[id]: s.values[id]===opt ? '' : opt} }));
+  }
+  setDate(id,field,val){
+    this.setState(s=>({ values:{...s.values,[id]:{...s.values[id],[field]:val}} }));
+  }
+  clearFilter(id){
+    const d=this.defs()[id];
+    const empty = d.type==='multi'?[] : d.type==='date'?{from:'',to:''} : '';
+    this.setState(s=>({ values:{...s.values,[id]:empty} }));
+  }
+  removeValue(id,opt){
+    const d=this.defs()[id];
+    if(d.type==='multi'){ this.setState(s=>({ values:{...s.values,[id]:s.values[id].filter(x=>x!==opt)} })); }
+    else this.clearFilter(id);
+  }
+  clearAll(){
+    this.setState({ search:'', values:{ domaine:[],categorie:'',voie:[],datePub:{from:'',to:''},nature:[],experience:'' }, bools:{teletravail:false,management:false,inscription:false} });
+  }
+
+  buildGroups(){
+    const out=[]; const defs=this.defs(); const v=this.state.values;
+    const TAG_LONG=28, MANY=5;
+    const wrapBase='display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding-bottom:14px;border-bottom:1px solid var(--grey-950)';
+    const labelInline='font:700 15px/20px var(--font-sans);color:var(--text-default-grey);flex:none';
+    const labelBlock='font:700 15px/20px var(--font-sans);color:var(--text-default-grey);flex-basis:100%';
+
+    // recherche texte
+    if(this.state.search){
+      out.push({ wrapStyle:wrapBase, labelStyle:labelInline, showLabel:true, labelText:'Mot-clé :',
+        tags:[{ text:'« '+this.state.search+' »', onRemove:()=>this.setState({search:''}) }] });
+    }
+    // filtres déclarés
+    Object.keys(defs).forEach(id=>{
+      const d=defs[id]; const val=v[id];
+      let vals=[];
+      if(d.type==='multi') vals=val||[];
+      else if(d.type==='mono'){ if(val) vals=[val]; }
+      else if(d.type==='date'){ const f=this.fmtDate(val); if(f) vals=[f]; }
+      if(!vals.length) return;
+      const longest=Math.max(...vals.map(x=>x.length));
+      const block = d.type==='multi' && (vals.length>=MANY || longest>TAG_LONG);
+      out.push({
+        wrapStyle:wrapBase,
+        labelStyle: block?labelBlock:labelInline,
+        showLabel:true,
+        labelText: d.label+' :',
+        tags: vals.map(x=>({ text:x, onRemove:()=>this.removeValue(id,x) }))
+      });
+    });
+    // booléens
+    Object.keys(this.state.bools).forEach(b=>{
+      if(this.state.bools[b]) out.push({
+        wrapStyle:'display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding-bottom:14px;border-bottom:1px solid var(--grey-950)',
+        labelStyle:'', showLabel:false, labelText:'',
+        tags:[{ text:this.boolDefs()[b], onRemove:()=>this.toggleBool(b) }]
+      });
+    });
+    return out;
+  }
+
+  renderVals(){
+    const defs=this.defs();
+    const btnBase='display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;background:var(--background-default-grey);border:1px solid var(--border-action-low-blue-france);color:var(--text-action-high-blue-france);font:500 16px/24px var(--font-sans);cursor:pointer';
+    const btnActive='display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;background:var(--background-action-low-blue-france);border:1px solid var(--border-action-high-blue-france);color:var(--text-action-high-blue-france);font:500 16px/24px var(--font-sans);cursor:pointer';
+
+    const buttons = Object.keys(defs).map(id=>{
+      const c=this.count(id);
+      return { id, label:defs[id].label, count: c||'', style: c?btnActive:btnBase, onOpen:()=>this.openPanel(id) };
+    });
+
+    const trackOn='position:relative;width:40px;height:24px;border-radius:var(--radius-full);border:none;background:var(--background-action-high-blue-france);cursor:pointer;padding:0;flex:none';
+    const trackOff='position:relative;width:40px;height:24px;border-radius:var(--radius-full);border:1px solid var(--border-action-high-blue-france);background:var(--background-default-grey);cursor:pointer;padding:0;flex:none';
+    const thumbOn='position:absolute;top:3px;left:19px;width:18px;height:18px;border-radius:50%;background:var(--grey-1000)';
+    const thumbOff='position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--background-action-high-blue-france)';
+    const bools = Object.keys(this.state.bools).map(id=>({
+      id, label:this.boolDefs()[id], on:this.state.bools[id],
+      trackStyle:this.state.bools[id]?trackOn:trackOff,
+      thumbStyle:this.state.bools[id]?thumbOn:thumbOff,
+      onToggle:()=>this.toggleBool(id)
+    }));
+
+    const groups=this.buildGroups();
+
+    // panneau
+    const pid=this.state.openPanel;
+    let panel={ open:false, label:'', isDate:false, isChoice:false, options:[], dateFrom:'', dateTo:'', onClose:()=>this.closePanel(), onClearThis:()=>{}, onDateFrom:()=>{}, onDateTo:()=>{} };
+    if(pid){
+      const d=defs[pid]; const val=this.state.values[pid];
+      panel.open=true; panel.label=d.label; panel.onClearThis=()=>this.clearFilter(pid);
+      if(d.type==='date'){
+        panel.isDate=true; panel.dateFrom=val.from; panel.dateTo=val.to;
+        panel.onDateFrom=(e)=>this.setDate(pid,'from',e.target.value);
+        panel.onDateTo=(e)=>this.setDate(pid,'to',e.target.value);
+      } else {
+        panel.isChoice=true;
+        const isMulti=d.type==='multi';
+        const boxBase='display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:none;border:2px solid var(--border-action-high-blue-france);';
+        panel.options=d.options.map(o=>{
+          const selected=isMulti?val.indexOf(o)>=0:val===o;
+          const radius=isMulti?'border-radius:var(--radius-sm);':'border-radius:50%;';
+          const fill=selected?'background:var(--background-action-high-blue-france);':'background:var(--background-default-grey);';
+          return { label:o, selected, checkIcon:isMulti?'ri-check-line':'ri-circle-fill', boxStyle:boxBase+radius+fill,
+            onToggle: isMulti?()=>this.toggleMulti(pid,o):()=>this.setMono(pid,o) };
+        });
+      }
+    }
+
+    return {
+      searchValue:this.state.search, onSearch:(e)=>this.setSearch(e),
+      onSearchBtn:()=>{},
+      buttons, bools,
+      activeGroups:groups, activeCount:groups.length, hasActive:groups.length>0, noneActive:groups.length===0,
+      onClearAll:()=>this.clearAll(),
+      panel
+    };
+  }
+}
+</script>
+</body>
+</html>
