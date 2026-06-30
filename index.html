@@ -21,10 +21,6 @@
 <body>
 <div style="max-width:1100px;margin:0 auto;padding:44px 24px 120px">
 
-  <p style="margin:0 0 6px;font:700 13px/18px var(--font-sans);text-transform:uppercase;letter-spacing:.06em;color:var(--text-action-high-blue-france)">Prototype interactif · DSFR</p>
-  <h1 style="margin:0 0 18px;font:700 40px/48px var(--font-sans);color:var(--text-title-grey);letter-spacing:-.01em">Titre 1</h1>
-  <p class="fr-text--lead" style="margin:0 0 36px;max-width:780px">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque porta lorem eget elit accumsan dignissim. Nunc urna nisi, porttitor sit amet pharetra vel, egestas sit amet enim. In quam quam, rhoncus vel velit quis, malesuada gravida nulla.</p>
-
   <!-- ===== DISCLOSE : LISTE DES FILTRES À SIMULER ===== -->
   <details id="setup-disclose" open style="background:var(--grey-100);color:#fff;margin-bottom:36px">
     <summary style="list-style:none;cursor:pointer;padding:18px 26px;display:flex;align-items:center;justify-content:space-between;gap:16px;user-select:none">
@@ -35,10 +31,11 @@
       </span>
     </summary>
     <div style="padding:0 26px 24px">
-      <div style="display:grid;grid-template-columns:140px 1fr 130px 36px;gap:14px;padding:0 0 8px;border-bottom:1px solid var(--grey-200);font:500 11px/16px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--grey-800)">
+      <div style="display:grid;grid-template-columns:140px 1fr 130px 130px 36px;gap:14px;padding:0 0 8px;border-bottom:1px solid var(--grey-200);font:500 11px/16px var(--font-sans);text-transform:uppercase;letter-spacing:.05em;color:var(--grey-800)">
         <span>Type</span>
         <span>Caractéristiques</span>
         <span>Zone</span>
+        <span>Récap tertiaire</span>
         <span></span>
       </div>
       <div id="rows" style="display:flex;flex-direction:column"></div>
@@ -47,6 +44,10 @@
       </button>
     </div>
   </details>
+
+  <p style="margin:0 0 6px;font:700 13px/18px var(--font-sans);text-transform:uppercase;letter-spacing:.06em;color:var(--text-action-high-blue-france)">Prototype interactif · DSFR</p>
+  <h1 style="margin:0 0 18px;font:700 40px/48px var(--font-sans);color:var(--text-title-grey);letter-spacing:-.01em">Titre 1</h1>
+  <p class="fr-text--lead" style="margin:0 0 36px;max-width:780px">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque porta lorem eget elit accumsan dignissim. Nunc urna nisi, porttitor sit amet pharetra vel, egestas sit amet enim. In quam quam, rhoncus vel velit quis, malesuada gravida nulla.</p>
 
   <!-- ===== PREVIEW : Affiner votre recherche (façon prod) ===== -->
   <section style="background:#fff;border:1px solid var(--border-default-grey)">
@@ -92,8 +93,7 @@
   ];
   var ZONES = [
     { key: 'primaire',   label: 'Primaire' },
-    { key: 'secondaire', label: 'Secondaire' },
-    { key: 'tertiaire',  label: 'Tertiaire' }
+    { key: 'secondaire', label: 'Secondaire' }
   ];
 
   // ──────────────────── Helper DOM ────────────────────
@@ -144,7 +144,7 @@
   // ──────────────────── Actions ────────────────────
   function addRow() {
     var id = S.nextId++;
-    S.items.push({ id: id, type: 'multi', n: 5, longLabels: false, zone: 'primaire' });
+    S.items.push({ id: id, type: 'multi', n: 5, longLabels: false, zone: 'primaire', tertiary: false });
     S.values[id] = defaultValues();
     render();
   }
@@ -233,6 +233,18 @@
       zoneSel.appendChild(opt);
     });
 
+    var tertCell = h('label', {
+      style: 'display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:#fff;font:400 13px/1 var(--font-sans)'
+    },
+      h('input', {
+        type: 'checkbox',
+        style: 'accent-color:var(--blue-france-sun-113);width:16px;height:16px;margin:0',
+        checked: it.tertiary ? '' : null,
+        onChange: function (e) { setProp(it.id, 'tertiary', e.target.checked); }
+      }),
+      h('span', { style: 'color:var(--grey-800)' }, 'Restituer')
+    );
+
     var del = h('button', {
       title: 'Supprimer cette ligne', 'aria-label': 'Supprimer cette ligne',
       style: 'width:32px;height:32px;border:none;background:transparent;color:var(--grey-800);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border-radius:2px',
@@ -240,8 +252,8 @@
     }, icon('ri-close-line', 'font-size:18px'));
 
     return h('div', {
-      style: 'display:grid;grid-template-columns:140px 1fr 130px 36px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--grey-200)'
-    }, typeSel, carac, zoneSel, del);
+      style: 'display:grid;grid-template-columns:140px 1fr 130px 130px 36px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--grey-200)'
+    }, typeSel, carac, zoneSel, tertCell, del);
   }
 
   // ──────────────────── Calcul de layout pour input exposé ────────────────────
@@ -472,8 +484,8 @@
     var secTexts   = S.items.filter(function (it) { return it.zone === 'secondaire' && it.type === 'text'; });
     var primItems  = S.items.filter(function (it) { return it.zone === 'primaire'; });
     var secOthers  = S.items.filter(function (it) { return it.zone === 'secondaire' && it.type !== 'text'; });
-    var tertItems  = S.items.filter(function (it) { return it.zone === 'tertiaire'; });
-    var totalShown = secTexts.length + primItems.length + secOthers.length + tertItems.length;
+    var tertItems  = S.items.filter(function (it) { return it.tertiary; });
+    var totalShown = secTexts.length + primItems.length + secOthers.length;
 
     if (totalShown === 0) {
       body.appendChild(emptyMsg('Aucun filtre configuré. Ouvre les réglages pour en ajouter.'));
@@ -530,16 +542,16 @@
 
   // jeu d'exemple par défaut (proche du Test_refonte_Vue_portail)
   var seed = [
-    { type: 'text',  n: 0, longLabels: false, zone: 'secondaire' },
-    { type: 'multi', n: 7, longLabels: false, zone: 'primaire' },
-    { type: 'mono',  n: 4, longLabels: false, zone: 'primaire' },
-    { type: 'multi', n: 5, longLabels: false, zone: 'primaire' },
-    { type: 'date',  n: 0, longLabels: false, zone: 'primaire' },
-    { type: 'bool',  n: 0, longLabels: false, zone: 'secondaire' }
+    { type: 'text',  n: 0, longLabels: false, zone: 'secondaire', tertiary: false },
+    { type: 'multi', n: 7, longLabels: false, zone: 'primaire',   tertiary: true  },
+    { type: 'mono',  n: 4, longLabels: false, zone: 'primaire',   tertiary: true  },
+    { type: 'multi', n: 5, longLabels: false, zone: 'primaire',   tertiary: false },
+    { type: 'date',  n: 0, longLabels: false, zone: 'primaire',   tertiary: false },
+    { type: 'bool',  n: 0, longLabels: false, zone: 'secondaire', tertiary: false }
   ];
   seed.forEach(function (cfg) {
     var id = S.nextId++;
-    S.items.push({ id: id, type: cfg.type, n: cfg.n || 5, longLabels: cfg.longLabels, zone: cfg.zone });
+    S.items.push({ id: id, type: cfg.type, n: cfg.n || 5, longLabels: cfg.longLabels, zone: cfg.zone, tertiary: cfg.tertiary });
     S.values[id] = defaultValues();
   });
 
